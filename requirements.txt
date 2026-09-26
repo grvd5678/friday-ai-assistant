@@ -1,0 +1,12 @@
+# FRIDAY 3.0 Core Requirements
+google-genai>=2.18.0
+ollama>=0.6.0
+edge-tts>=7.2.0
+playsound3>=3.3.0
+SpeechRecognition>=3.17.0
+PyAudio>=0.2.14
+psutil>=7.2.0
+pyautogui>=0.9.54
+pywhatkit>=5.4
+pywebview>=6.2.0
+python-dotenv>=1.2.0

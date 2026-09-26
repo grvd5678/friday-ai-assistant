@@ -1,0 +1,23 @@
+# Python virtual environments & caches
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Environment credentials & private keys
+.env
+*.env.local
+
+# Personal memory & persistent user data
+friday_memory.json
+
+# Audio and generated media files
+*.wav
+*.mp3
+screenshots/
+screenshot*.png
+
+# IDE & system metadata
+.vscode/
+.idea/
+.system_generated/

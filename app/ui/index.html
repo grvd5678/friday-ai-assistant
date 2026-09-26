@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRIDAY Tactical AI HUD</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="hud-container">
+    
+    <!-- Top Decorative Header -->
+    <header class="hud-top-bar">
+      <div class="sys-id">SYSTEM: <span class="cyan-glow">F.R.I.D.A.Y. MARK III</span></div>
+      <div class="status-clock" id="system-time">00:00:00</div>
+      <div class="connection-status"><span class="pulse-dot"></span> HYBRID AI ONLINE</div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="hud-main">
+      
+      <!-- Left Telemetry Panel (Matching Tactical HUD) -->
+      <aside class="telemetry-panel">
+        <div class="telemetry-row">
+          <span class="label">CPU</span>
+          <div class="bar-container">
+            <div class="bar-fill" id="cpu-bar" style="width: 25%;"></div>
+          </div>
+          <span class="val cyan-glow" id="cpu-val">25%</span>
+        </div>
+
+        <div class="telemetry-row">
+          <span class="label">MEM</span>
+          <div class="bar-container">
+            <div class="bar-fill" id="mem-bar" style="width: 54%;"></div>
+          </div>
+          <span class="val cyan-glow" id="mem-val">54%</span>
+        </div>
+
+        <div class="telemetry-row">
+          <span class="label">NET</span>
+          <span class="val-full cyan-glow" id="net-val">333 KB/s</span>
+        </div>
+
+        <div class="telemetry-row">
+          <span class="label">BAT</span>
+          <span class="val-full cyan-glow" id="bat-val">100%</span>
+        </div>
+
+        <div class="telemetry-row">
+          <span class="label">TMP</span>
+          <span class="val-full cyan-glow" id="temp-val">42°C</span>
+        </div>
+
+        <div class="telemetry-divider"></div>
+
+        <div class="telemetry-row">
+          <span class="label">UP</span>
+          <span class="val-full cyan-glow" id="uptime-val">00:00:00</span>
+        </div>
+
+        <div class="telemetry-row">
+          <span class="label">PROC</span>
+          <span class="val-full cyan-glow" id="proc-val">191</span>
+        </div>
+
+        <div class="telemetry-row">
+          <span class="label">OS</span>
+          <span class="val-full" id="os-val">WIN 11</span>
+        </div>
+
+        <div class="telemetry-divider"></div>
+
+        <div class="status-box">
+          <div class="box-title">AI CORE</div>
+          <div class="box-status active-green" id="ai-core-status">ACTIVE</div>
+        </div>
+
+        <div class="status-box">
+          <div class="box-title">SEC</div>
+          <div class="box-status active-green">ONLINE</div>
+        </div>
+      </aside>
+
+      <!-- Center Holographic Arc Reactor Area -->
+      <section class="hologram-stage">
+        <div class="arc-reactor" id="arc-reactor" title="Click to Talk with FRIDAY (or say 'Hey Friday')">
+          
+          <!-- Outer Track & Rings -->
+          <div class="ring outer-ring"></div>
+          <div class="ring dashed-ring"></div>
+          <div class="ring arc-ring-1"></div>
+          <div class="ring arc-ring-2"></div>
+          
+          <!-- Crosshair Ticks -->
+          <div class="crosshair-h"></div>
+          <div class="crosshair-v"></div>
+
+          <!-- Orbiting Particles -->
+          <div class="particle p1"></div>
+          <div class="particle p2"></div>
+          <div class="particle p3"></div>
+          <div class="particle p4"></div>
+
+          <!-- Central Holographic Face Avatar -->
+          <div class="hologram-avatar-container" id="avatar-container">
+            <div class="holo-energy-backdrop"></div>
+            <img src="friday_face_f0.png" alt="FRIDAY Holographic Core" class="hologram-avatar" id="friday-avatar" />
+            <div class="holo-scanline-beam"></div>
+            <div class="avatar-tag">F.R.I.D.A.Y. CORE</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Action / Memory Feed Panel -->
+      <aside class="right-panel">
+        <div class="panel-header">TACTICAL FEED</div>
+        <div class="tactical-log" id="tactical-log">
+          <div class="log-entry system">[BOOT] Core modules initialized.</div>
+          <div class="log-entry system">[AI] Gemini 3.5 Flash connected.</div>
+          <div class="log-entry system">[TTS] Emily Neural voice loaded.</div>
+          <div class="log-entry user">[READY] Say "Hey Friday" or click core.</div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Bottom Subtitle & Speech Visualizer Area -->
+    <footer class="hud-footer">
+      
+      <!-- Live Subtitle Output -->
+      <div class="subtitle-container">
+        <div class="subtitle-text" id="subtitle-text">SYSTEM ONLINE AND OPERATIONAL. HOW MAY I ASSIST YOU TODAY, BOSS?</div>
+      </div>
+
+      <!-- Status Indicator Pill -->
+      <div class="status-indicator-pill" id="status-indicator">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-label" id="status-label">STANDBY</span>
+      </div>
+
+      <!-- Dynamic Equalizer Audio Waveform -->
+      <div class="waveform-container" id="waveform">
+        <!-- 28 animated waveform bars -->
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      </div>
+
+      <!-- Quick Command Action Chips -->
+      <div class="quick-chips">
+        <button class="chip" data-cmd="Start Live Mode">🎙️ LIVE STREAM</button>
+        <button class="chip" data-cmd="Give me the morning briefing">☀️ BRIEFING</button>
+        <button class="chip" data-cmd="Look at my screen and tell me what you see">👁️ VISION</button>
+        <button class="chip" data-cmd="Activate Developer Mode">💻 DEV MODE</button>
+        <button class="chip" data-cmd="Activate Movie Mode">🎬 MOVIE MODE</button>
+        <button class="chip" data-cmd="Find all PDF files in my Downloads">📁 FIND PDFS</button>
+        <button class="chip" data-cmd="Check my system diagnostics">📊 DIAGNOSTICS</button>
+        <button class="chip" data-cmd="What is the weather today?">🌦️ WEATHER</button>
+        <button class="chip" data-cmd="Activate Lockdown Protocol">🔒 LOCKDOWN</button>
+      </div>
+
+      <!-- Quick Command Input -->
+      <div class="command-bar">
+        <input type="text" id="cmd-input" placeholder="Type a command or press Mic (Say 'Hey Friday')..." autocomplete="off" />
+        <button id="mic-btn" class="hud-btn" title="Toggle Voice Recognition">🎙️</button>
+        <button id="send-btn" class="hud-btn" title="Send Command">⚡</button>
+      </div>
+
+    </footer>
+
+  </div>
+
+  <script src="hud.js"></script>
+</body>
+</html>
