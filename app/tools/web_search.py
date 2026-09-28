@@ -1,3 +1,4 @@
+import re
 import webbrowser
 import urllib.parse
 import requests
@@ -42,8 +43,11 @@ def get_weather(location: str = "") -> str:
         url_target = f"https://wttr.in/{urllib.parse.quote(clean_loc)}?format=Condition:+%C,+Temperature:+%t,+Wind:+%w"
         resp = requests.get(url_target, timeout=6)
         if resp.status_code == 200:
+            raw_text = resp.text.strip()
+            # Clean unicode wind arrows (\u2190-\u2199) and plus signs
+            clean_text = re.sub(r'[\u2190-\u2199]', '', raw_text).replace('+', '').strip()
             loc_label = f"in {clean_loc.title()}" if clean_loc else "locally"
-            return f"Current weather {loc_label}: {resp.text.strip()}."
+            return f"Current weather {loc_label}: {clean_text}."
         else:
             return "Unable to retrieve weather data at this moment, Boss."
     except Exception as e:

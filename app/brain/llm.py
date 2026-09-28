@@ -1,5 +1,6 @@
 import os
 import re
+import time
 
 try:
     import ollama
@@ -64,6 +65,25 @@ FRIDAY_TOOLS = [
 _gemini_client = None
 _gemini_chat = None
 
+def _build_live_system_instruction() -> str:
+    """Constructs dynamic system instruction with live real-world clock and persistent memory."""
+    now = time.localtime()
+    day_name = time.strftime("%A", now)
+    date_str = time.strftime("%B %d, %Y", now)
+    time_str = time.strftime("%I:%M %p", now)
+    temporal_anchor = (
+        f"LIVE REAL-TIME SYSTEM CLOCK:\n"
+        f"- Today's Real-World Date: {day_name}, {date_str}\n"
+        f"- Current Local Time: {time_str}\n"
+        f"- Current Real-World Year: {now.tm_year}\n"
+        f"CRITICAL TEMPORAL RULES:\n"
+        f"- Whenever the user asks about today, date, time, day, or schedule, strictly base your answer on this live real-world system clock.\n"
+        f"- NEVER hallucinate historical dates from pre-training data (such as 2023 or 2024).\n"
+        f"- When asked about weather conditions or forecast, always call get_weather for live telemetry."
+    )
+    memory_context = memory.get_memory_context_prompt()
+    return f"{FRIDAY_SYSTEM_PROMPT}\n\n{temporal_anchor}\n\n{memory_context}"
+
 def _get_gemini_chat():
     """Initializes or returns active Gemini chat session with tools and system instruction."""
     global _gemini_client, _gemini_chat
@@ -73,10 +93,7 @@ def _get_gemini_chat():
     if _gemini_chat is None:
         try:
             _gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
-            
-            # Combine system prompt with persistent memory context
-            memory_context = memory.get_memory_context_prompt()
-            full_system_instruction = f"{FRIDAY_SYSTEM_PROMPT}\n\n{memory_context}"
+            full_system_instruction = _build_live_system_instruction()
 
             _gemini_chat = _gemini_client.chats.create(
                 model=config.GEMINI_MODEL,
@@ -100,9 +117,14 @@ def _local_rule_fallback(prompt: str) -> str:
     if any(k in p for k in ["what tasks can you do", "what can you do", "what are your capabilities", "what are your features", "what tasks you can do", "what all can you do", "what can friday do", "tell me what you can do", "list your capabilities"]):
         return "I am your tactical AI assistant, Boss. I manage your applications, monitor hardware diagnostics, inspect your screen and camera, analyze documents and files, and execute custom automated work modes. What would you like to do?"
 
-    # Datetime / Time
-    if any(k in p for k in ["what time", "what date", "current time", "today's date", "day is it"]):
-        return get_datetime_info()
+    # Datetime / Time / Today
+    if any(k in p for k in ["tell me today", "what about today", "how is today", "what is today", "today's date", "todays date", "what day is it", "what date", "current date", "what time", "current time"]) or p in ["today", "what is today?", "today date"]:
+        dt = get_datetime_info()
+        try:
+            weather = get_weather()
+            return f"Boss! {dt} {weather}"
+        except Exception:
+            return f"Boss! {dt}"
 
     # System stats & Hardware
     if any(k in p for k in ["system stat", "cpu", "ram", "hardware", "diagnostic"]):
@@ -297,6 +319,31 @@ def ask_friday(prompt: str) -> str:
     # Fast path for Morning Tactical Briefing
     if any(k in p_lower for k in ["morning briefing", "daily briefing", "tactical briefing", "brief me"]):
         result = get_morning_briefing()
+        memory.add_message("user", prompt)
+        memory.add_message("assistant", result)
+        return result
+
+    # Fast path for "today", current date, and local weather
+    if any(k in p_lower for k in [
+        "tell me today", "what about today", "how is today", "what is today",
+        "today's date", "todays date", "what day is it", "what date is it",
+        "what is the date", "what date", "current date", "tell me about today"
+    ]) or p_lower in ["today", "today?", "what is today?", "what's today?", "today date"]:
+        dt = get_datetime_info()
+        try:
+            weather = get_weather()
+            result = f"Boss! {dt} {weather}"
+        except Exception:
+            result = f"Boss! {dt}"
+        memory.add_message("user", prompt)
+        memory.add_message("assistant", result)
+        return result
+
+    # Fast path for live time
+    if any(k in p_lower for k in ["what time", "current time", "what is the time", "tell me the time", "what's the time", "time right now"]):
+        now = time.localtime()
+        time_str = time.strftime("%I:%M %p", now)
+        result = f"The current time is {time_str}, Boss."
         memory.add_message("user", prompt)
         memory.add_message("assistant", result)
         return result

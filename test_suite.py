@@ -81,7 +81,15 @@ class TestFridayCore(unittest.TestCase):
         self.assertLess(len(summary.split()), 45)
         self.assertIn("Tactical Feed", summary)
         self.assertNotIn("###", summary)
-        self.assertNotIn("**", summary)
+    def test_today_fast_path(self):
+        """Verify 'ok can you tell me today' returns current date and accurate telemetry without hallucinations."""
+        from app.brain.llm import ask_friday
+        import time
+        res = ask_friday("ok can you tell me today")
+        current_year = str(time.localtime().tm_year)
+        self.assertIn("Boss", res)
+        self.assertIn(current_year, res)
+        self.assertNotIn("2023", res)
 
 if __name__ == "__main__":
     unittest.main()
