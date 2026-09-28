@@ -1,6 +1,11 @@
 import os
 import re
-import ollama
+
+try:
+    import ollama
+except ImportError:
+    ollama = None
+
 from google import genai
 from google.genai import types
 
@@ -234,6 +239,8 @@ def _local_rule_fallback(prompt: str) -> str:
 
 def _ask_ollama_fallback(prompt: str) -> str:
     """Queries local Ollama model if running."""
+    if not ollama:
+        return _local_rule_fallback(prompt)
     try:
         messages = [
             {"role": "system", "content": f"{FRIDAY_SYSTEM_PROMPT}\n\n{memory.get_memory_context_prompt()}"}
