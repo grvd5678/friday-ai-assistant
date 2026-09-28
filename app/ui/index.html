@@ -164,9 +164,17 @@
         <button class="chip" data-cmd="Activate Lockdown Protocol">🔒 LOCKDOWN</button>
       </div>
 
+      <!-- Attached File Indicator -->
+      <div id="file-attachment-badge" class="file-badge" style="display: none;">
+        <span class="file-icon">📎</span>
+        <span id="file-badge-name" class="file-name">filename.pdf</span>
+        <button id="remove-file-btn" class="file-remove" title="Remove attached file">✕</button>
+      </div>
+
       <!-- Quick Command Input -->
       <div class="command-bar">
-        <input type="text" id="cmd-input" placeholder="Type a command or press Mic (Say 'Hey Friday')..." autocomplete="off" />
+        <button id="attach-btn" class="hud-btn attach-btn" title="Attach Document (PDF, DOCX, PNG, Images, Text)">📎</button>
+        <input type="text" id="cmd-input" placeholder="Type a command or attach file (PDF, DOCX, PNG)..." autocomplete="off" />
         <button id="mic-btn" class="hud-btn" title="Toggle Voice Recognition">🎙️</button>
         <button id="send-btn" class="hud-btn" title="Send Command">⚡</button>
       </div>

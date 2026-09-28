@@ -587,6 +587,74 @@ body {
   box-shadow: 0 0 12px var(--cyan-primary);
 }
 
+.attach-btn {
+  margin-left: 0;
+  margin-right: 6px;
+  background: rgba(0, 240, 255, 0.1);
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+.attach-btn.attached {
+  background: rgba(0, 255, 136, 0.25);
+  border-color: #00ff88;
+  color: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+/* Attached File Indicator Badge */
+.file-badge {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid var(--cyan-primary);
+  border-radius: 14px;
+  padding: 4px 12px;
+  margin-bottom: 8px;
+  font-family: var(--font-hud);
+  font-size: 11px;
+  color: var(--cyan-primary);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+  animation: fadeIn 0.3s ease;
+  max-width: 600px;
+}
+
+.file-badge .file-icon {
+  margin-right: 6px;
+  font-size: 12px;
+}
+
+.file-badge .file-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.8px;
+  color: #ffffff;
+}
+
+.file-badge .file-remove {
+  background: transparent;
+  border: none;
+  color: #ff4444;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+  padding: 0 4px;
+  transition: all 0.2s ease;
+}
+
+.file-badge .file-remove:hover {
+  color: #ff0055;
+  transform: scale(1.2);
+}
+
+/* Drag-and-drop HUD overlay */
+body.drag-over {
+  outline: 2px dashed var(--cyan-primary);
+  outline-offset: -8px;
+}
+
 /* Quick Action Command Chips */
 .quick-chips {
   display: flex;

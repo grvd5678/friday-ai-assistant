@@ -66,31 +66,62 @@ class FRIDAY_API:
                 pass
 
     def update_status(self, state: str, message: str = ""):
-        safe_msg = message.replace('"', '\\"').replace('\n', ' ')
-        self.js_call(f'window.fridayHUD && window.fridayHUD.setStatus("{state}", "{safe_msg}");')
+        self.js_call(f"window.fridayHUD && window.fridayHUD.setStatus({json.dumps(state)}, {json.dumps(message)});")
 
     def append_log(self, log_type: str, text: str):
-        safe_text = text.replace('"', '\\"').replace('\n', ' ')
-        self.js_call(f'window.fridayHUD && window.fridayHUD.appendLog("{log_type}", "{safe_text}");')
+        self.js_call(f"window.fridayHUD && window.fridayHUD.appendLog({json.dumps(log_type)}, {json.dumps(text)});")
 
     def update_telemetry(self, stats: dict):
         stats_json = json.dumps(stats)
         self.js_call(f'window.fridayHUD && window.fridayHUD.updateTelemetry({stats_json});')
 
-    def process_user_query(self, query: str):
-        """Processes typed or spoken command in background thread."""
+    def select_file(self) -> str:
+        """Opens native Windows file dialog allowing user to choose PDF, DOCX, PNG, JPG, or TXT."""
+        if not self.window:
+            return ""
+        try:
+            try:
+                dialog_type = webview.FileDialog.OPEN
+            except AttributeError:
+                dialog_type = webview.OPEN_DIALOG
+
+            file_types = (
+                "All Supported Files (*.pdf;*.docx;*.doc;*.png;*.jpg;*.jpeg;*.webp;*.txt;*.py;*.csv)",
+                "PDF Documents (*.pdf)",
+                "Word Documents (*.docx;*.doc)",
+                "Images (*.png;*.jpg;*.jpeg;*.webp)",
+                "Text & Code (*.txt;*.py;*.csv;*.json;*.md)",
+                "All Files (*.*)"
+            )
+            res = self.window.create_file_dialog(dialog_type, allow_multiple=False, file_types=file_types)
+            if res and len(res) > 0:
+                selected_path = res[0]
+                file_name = os.path.basename(selected_path)
+                self.append_log("system", f"Attached document: {file_name}")
+                return selected_path
+        except Exception as e:
+            print(f"[File Selection Error] {e}")
+        return ""
+
+    def process_user_query(self, query: str, file_path: str = None):
+        """Processes typed or spoken command in background thread, with optional attached file."""
         if not query or self._is_busy:
             return
 
         def _worker():
             self._is_busy = True
             try:
-                self.update_status("THINKING", f'PROCESSING: "{query}"')
-                self.append_log("user", query)
+                display_msg = f"{query} [📎 {os.path.basename(file_path)}]" if file_path else query
+                self.update_status("THINKING", f'PROCESSING: "{display_msg}"')
+                self.append_log("user", display_msg)
 
-                response = ask_friday(query)
+                if file_path and os.path.exists(file_path):
+                    from app.tools.document_tool import analyze_document
+                    response = analyze_document(file_path, query)
+                else:
+                    response = ask_friday(query)
+
                 self.append_log("assistant", response)
-
                 self.update_status("SPEAKING", response)
                 speak(response)
 

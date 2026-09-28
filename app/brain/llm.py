@@ -13,6 +13,7 @@ from app.tools.web_search import search_web, play_youtube, get_wikipedia_summary
 from app.tools.whatsapp_tool import send_whatsapp_message
 from app.tools.screenshot_tool import take_screenshot, open_screenshots_folder
 from app.tools.vision_tool import inspect_screen, inspect_webcam
+from app.tools.document_tool import analyze_document
 from app.tools.briefing_tool import get_morning_briefing
 from app.tools.modes import activate_developer_mode, activate_movie_mode, activate_lockdown_mode, activate_focus_mode
 from app.tools.file_tool import find_files, organize_folder, open_folder
@@ -23,6 +24,7 @@ from app.vision.face_presence import check_user_present
 FRIDAY_TOOLS = [
     open_app,
     close_app,
+    analyze_document,
     get_system_stats,
     get_battery_status,
     get_datetime_info,

@@ -75,43 +75,81 @@ PROCESS_MAP = {
 }
 
 def open_app(app_name: str) -> str:
-    """Launches local system applications, web portals, or Windows UWP apps."""
+    """Launches local system applications, web portals, or Windows UWP apps safely."""
+    import re
     clean = app_name.lower().strip()
     
-    # 1. Exact match
-    if clean in APP_MAP:
-        os.system(APP_MAP[clean])
-        return f"Opening {app_name} for you now, Boss."
+    # Reject dangerous characters in app_name upfront before any processing
+    if not re.match(r"^[a-zA-Z0-9_\-\.\s:]+$", clean):
+        return f"Launch request for '{app_name}' rejected due to invalid characters, Boss."
 
-    # 2. Substring matching
-    for key, cmd in APP_MAP.items():
-        if key in clean or clean in key:
-            os.system(cmd)
-            return f"Opening {key.title()} for you now, Boss."
+    # 1. Exact match in allowlist
+    target_cmd = APP_MAP.get(clean)
+    
+    # 2. Substring matching in allowlist
+    if not target_cmd:
+        for key, cmd in APP_MAP.items():
+            if key in clean:
+                target_cmd = cmd
+                break
 
-    # 3. Fallback: Direct command launch
+    if target_cmd:
+        try:
+            if target_cmd.startswith("http://") or target_cmd.startswith("https://") or target_cmd.endswith(".exe"):
+                os.startfile(target_cmd)
+            else:
+                subprocess.Popen(target_cmd.split(), shell=False)
+            return f"Opening {app_name} for you now, Boss."
+        except Exception:
+            try:
+                os.startfile(target_cmd)
+                return f"Opening {app_name} for you now, Boss."
+            except Exception as e:
+                return f"Could not launch {app_name}: {str(e)}"
+
     try:
-        subprocess.Popen(f'start "" "{clean}"', shell=True)
+        os.startfile(clean)
         return f"Attempting to launch {app_name}, Boss."
     except Exception as e:
-        return f"Could not launch {app_name}: {str(e)}"
+        return f"Could not find or launch {app_name}: {str(e)}"
 
 def close_app(app_name: str) -> str:
-    """Closes a running application by name."""
+    """Closes a running application by process name safely without shell injection risks."""
+    import re
     clean = app_name.lower().strip()
+
+    # Reject dangerous characters in app_name before any processing
+    if not re.match(r"^[a-zA-Z0-9_\-\.\s]+$", clean):
+        return f"Process termination rejected: '{app_name}' contains invalid characters, Boss."
+
     proc_name = None
 
     for key, proc in PROCESS_MAP.items():
-        if key in clean or clean in key:
+        if key == clean:
             proc_name = proc
             break
 
     if not proc_name:
-        proc_name = f"{clean}.exe"
+        for key, proc in PROCESS_MAP.items():
+            if key in clean:
+                proc_name = proc
+                break
+
+    if not proc_name:
+        proc_name = clean if clean.endswith(".exe") else f"{clean}.exe"
+
+    # Strictly validate proc_name (only letters, numbers, dot, dash, underscore)
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+\.exe$", proc_name):
+        return f"Process termination rejected: '{app_name}' contains invalid characters."
+
+    # Prevent killing critical system processes
+    protected_processes = ["csrss.exe", "explorer.exe", "lsass.exe", "smss.exe", "services.exe", "winlogon.exe", "svchost.exe"]
+    if proc_name.lower() in protected_processes:
+        return f"Cannot terminate protected system process '{proc_name}', Boss."
 
     try:
-        res = subprocess.run(f"taskkill /f /im {proc_name}", shell=True, capture_output=True, text=True)
-        if "SUCCESS" in res.stdout.upper() or res.returncode == 0:
+        res = subprocess.run(["taskkill", "/f", "/im", proc_name], capture_output=True, text=True, check=False)
+        if res.returncode == 0 or "SUCCESS" in res.stdout.upper():
             return f"Closed {app_name} successfully, Boss."
         else:
             return f"Could not find or close {app_name}. It might not be running."

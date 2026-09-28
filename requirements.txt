@@ -10,3 +10,5 @@ pyautogui>=0.9.54
 pywhatkit>=5.4
 pywebview>=6.2.0
 python-dotenv>=1.2.0
+pypdf>=6.19.0
+python-docx>=1.2.0

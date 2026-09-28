@@ -20,11 +20,39 @@ document.addEventListener("DOMContentLoaded", () => {
   const cmdInput = document.getElementById("cmd-input");
   const micBtn = document.getElementById("mic-btn");
   const sendBtn = document.getElementById("send-btn");
+  const attachBtn = document.getElementById("attach-btn");
+  const fileBadge = document.getElementById("file-attachment-badge");
+  const fileBadgeName = document.getElementById("file-badge-name");
+  const removeFileBtn = document.getElementById("remove-file-btn");
   const arcReactor = document.getElementById("arc-reactor");
   const avatarContainer = document.getElementById("avatar-container");
   const avatarImg = document.getElementById("friday-avatar");
   const widgetToggleBtn = document.getElementById("widget-toggle-btn");
   const widgetRestoreBtn = document.getElementById("widget-restore-btn");
+
+  let attachedFilePath = null;
+
+  function setAttachedFile(filePath) {
+    if (!filePath) return;
+    attachedFilePath = filePath;
+    const fileName = filePath.split(/[\\/]/).pop();
+    if (fileBadgeName) fileBadgeName.textContent = fileName;
+    if (fileBadge) fileBadge.style.display = "flex";
+    if (attachBtn) attachBtn.classList.add("attached");
+    if (cmdInput) {
+      cmdInput.placeholder = `Ask anything about ${fileName}...`;
+      cmdInput.focus();
+    }
+  }
+
+  function clearAttachedFile() {
+    attachedFilePath = null;
+    if (fileBadge) fileBadge.style.display = "none";
+    if (attachBtn) attachBtn.classList.remove("attached");
+    if (cmdInput) {
+      cmdInput.placeholder = "Type a command or attach file (PDF, DOCX, PNG)...";
+    }
+  }
 
   // --- Viseme Lip-Sync Animation Engine ---
   const VISEME_FRAMES = [
@@ -172,17 +200,64 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Interaction Handlers ---
   function sendUserCommand(customText) {
     const query = (customText || cmdInput.value).trim();
-    if (!query) return;
+    if (!query && !attachedFilePath) return;
 
-    window.fridayHUD.setStatus("THINKING", `PROCESSING: "${query}"`);
+    const finalQuery = query || "Please analyze and summarize this attached document in detail.";
+    const filePathToSend = attachedFilePath;
+
+    window.fridayHUD.setStatus("THINKING", `PROCESSING: "${finalQuery}"`);
     cmdInput.value = "";
+    clearAttachedFile();
 
     if (window.pywebview && window.pywebview.api) {
-      window.pywebview.api.process_user_query(query);
+      window.pywebview.api.process_user_query(finalQuery, filePathToSend);
     } else {
-      console.log("Python bridge not connected. Query:", query);
+      console.log("Python bridge not connected. Query:", finalQuery, "File:", filePathToSend);
     }
   }
+
+  // File Attachment Handlers
+  if (attachBtn) {
+    attachBtn.addEventListener("click", () => {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.select_file) {
+        window.pywebview.api.select_file().then((selectedPath) => {
+          if (selectedPath) {
+            setAttachedFile(selectedPath);
+          }
+        });
+      }
+    });
+  }
+
+  if (removeFileBtn) {
+    removeFileBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearAttachedFile();
+    });
+  }
+
+  // Drag and drop onto HUD
+  window.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    document.body.classList.add("drag-over");
+  });
+
+  window.addEventListener("dragleave", (e) => {
+    if (e.relatedTarget === null) {
+      document.body.classList.remove("drag-over");
+    }
+  });
+
+  window.addEventListener("drop", (e) => {
+    e.preventDefault();
+    document.body.classList.remove("drag-over");
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.path) {
+        setAttachedFile(file.path);
+      }
+    }
+  });
 
   function triggerVoice() {
     window.fridayHUD.setStatus("LISTENING", "LISTENING FOR COMMAND...");

@@ -40,12 +40,21 @@ An advanced, female-voiced personal desktop AI tactical assistant inspired by Ma
 * **Auto-Organize:** *"FRIDAY, clean up my Downloads folder"* (categorizes files automatically into Documents, Images, Videos, Music, Installers, and Archives).
 * **Navigation:** *"FRIDAY, open my Downloads / Desktop / Documents folder"*
 
-### 📸 7. Integrated Screenshots & Windows Pictures Library
+### 📄 7. Document & Multimodal File Analysis (PDF, Word, Images, Code)
+* **📎 Native HUD Attachment & Drag-and-Drop:** Click the **📎** button or drag-and-drop any `.pdf`, `.docx`, `.png`, `.jpg`, `.txt`, `.py`, or `.csv` directly onto F.R.I.D.A.Y.'s HUD.
+* **Deep Document Understanding:**
+  * **PDFs:** Multimodal document ingestion and text parsing via `pypdf`.
+  * **Word Documents:** Paragraph and table extraction via `python-docx`.
+  * **Images & Diagrams:** High-resolution visual understanding via Gemini 2.5 Flash Vision.
+  * **Code & Data:** Text, CSV, JSON, and source code inspection.
+* **Commands:** *"Summarize this document"*, *"What does this contract say?"*, *"Extract key points from this PDF"*, *"Explain what is shown in this PNG"*.
+
+### 📸 8. Integrated Screenshots & Windows Pictures Library
 * Automatically saves high-resolution timestamped screenshots directly to your Windows Pictures directory:
   `OneDrive\Pictures\Screenshots 1` (with duplicate local backup in `screenshots/`).
 * Instant folder access: *"FRIDAY, open screenshots folder"* or *"Where did you save the screenshot?"*
 
-### 🧠 8. Hybrid AI Brain & Memory
+### 🧠 9. Hybrid AI Brain & Memory
 * **Primary:** Google Gemini 3.5 Flash / Flash Lite with autonomous function calling.
 * **Local Fallback:** Local Ollama (`llama3`) for offline privacy and resilience.
 * **Offline Rule Engine:** Instant deterministic fallback for core system controls.
