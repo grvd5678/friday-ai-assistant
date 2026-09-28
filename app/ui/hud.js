@@ -52,6 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cmdInput) {
       cmdInput.placeholder = "Type a command or attach file (PDF, DOCX, PNG)...";
     }
+    if (window.pywebview && window.pywebview.api && window.pywebview.api.clear_document_session) {
+      window.pywebview.api.clear_document_session();
+    }
   }
 
   // --- Viseme Lip-Sync Animation Engine ---
@@ -207,7 +210,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.fridayHUD.setStatus("THINKING", `PROCESSING: "${finalQuery}"`);
     cmdInput.value = "";
-    clearAttachedFile();
 
     if (window.pywebview && window.pywebview.api) {
       window.pywebview.api.process_user_query(finalQuery, filePathToSend);

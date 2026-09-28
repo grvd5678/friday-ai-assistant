@@ -53,6 +53,55 @@ def extract_text_from_plain(file_path: str) -> str:
             return f"[File Read Error: {str(e)}]"
     return "[Could not decode file with supported text encodings]"
 
+_active_document = {
+    "path": None,
+    "name": None,
+    "text": None
+}
+
+def set_active_document(file_path: str) -> str:
+    """Loads and caches document text into memory for multi-turn interactive conversation."""
+    global _active_document
+    if not file_path or not os.path.exists(file_path):
+        _active_document = {"path": None, "name": None, "text": None}
+        return ""
+
+    clean_path = file_path.strip().strip('"').strip("'")
+    ext = os.path.splitext(clean_path)[1].lower()
+    file_name = os.path.basename(clean_path)
+
+    text_content = ""
+    if ext == ".pdf":
+        text_content = extract_text_from_pdf(clean_path)
+    elif ext in [".docx", ".doc"]:
+        text_content = extract_text_from_docx(clean_path)
+    elif ext in [".txt", ".py", ".csv", ".json", ".md", ".log", ".html", ".js", ".css"]:
+        text_content = extract_text_from_plain(clean_path)
+
+    _active_document = {
+        "path": clean_path,
+        "name": file_name,
+        "text": text_content
+    }
+    return file_name
+
+def get_active_document() -> dict:
+    """Returns the currently active document session if any."""
+    global _active_document
+    return _active_document
+
+def clear_active_document():
+    """Clears active document session."""
+    global _active_document
+    _active_document = {"path": None, "name": None, "text": None}
+
+def chat_with_active_document(query: str) -> str:
+    """Answers questions continuously grounded in the active document."""
+    global _active_document
+    if not _active_document.get("path"):
+        return ""
+    return analyze_document(_active_document["path"], query)
+
 def analyze_document(file_path: str, query: str = "Please summarize the key contents and details of this document.") -> str:
     """
     Analyzes an uploaded or referenced document (PDF, Word DOCX, PNG/JPG image, or text file)
@@ -62,6 +111,7 @@ def analyze_document(file_path: str, query: str = "Please summarize the key cont
     if not os.path.exists(clean_path):
         return f"I cannot find the file at '{file_path}', Boss. Please verify the path."
 
+    set_active_document(clean_path)
     ext = os.path.splitext(clean_path)[1].lower()
     file_name = os.path.basename(clean_path)
 

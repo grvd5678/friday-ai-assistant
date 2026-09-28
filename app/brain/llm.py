@@ -18,8 +18,8 @@ from app.tools.system_control import open_app, close_app, change_volume, media_c
 from app.tools.web_search import search_web, play_youtube, get_wikipedia_summary, get_weather
 from app.tools.whatsapp_tool import send_whatsapp_message
 from app.tools.screenshot_tool import take_screenshot, open_screenshots_folder
-from app.tools.vision_tool import inspect_screen, inspect_webcam
-from app.tools.document_tool import analyze_document
+from app.tools.vision_tool import inspect_screen, inspect_webcam, take_webcam_photo
+from app.tools.document_tool import analyze_document, chat_with_active_document, get_active_document
 from app.tools.briefing_tool import get_morning_briefing
 from app.tools.modes import activate_developer_mode, activate_movie_mode, activate_lockdown_mode, activate_focus_mode
 from app.tools.file_tool import find_files, organize_folder, open_folder
@@ -46,6 +46,7 @@ FRIDAY_TOOLS = [
     open_screenshots_folder,
     inspect_screen,
     inspect_webcam,
+    take_webcam_photo,
     get_morning_briefing,
     activate_developer_mode,
     activate_movie_mode,
@@ -339,6 +340,15 @@ def ask_friday(prompt: str) -> str:
         memory.add_message("assistant", result)
         return result
 
+    # Fast path for live weather telemetry
+    if any(k in p_lower for k in ["weather", "forecast", "temperature", "climate"]) or "what's the weather" in p_lower:
+        loc_match = re.search(r"weather (?:in|for|at) (.+)", p_lower)
+        target_city = loc_match.group(1).strip() if loc_match else ""
+        result = get_weather(target_city)
+        memory.add_message("user", prompt)
+        memory.add_message("assistant", result)
+        return result
+
     # Fast path for live time
     if any(k in p_lower for k in ["what time", "current time", "what is the time", "tell me the time", "what's the time", "time right now"]):
         now = time.localtime()
@@ -380,12 +390,29 @@ def ask_friday(prompt: str) -> str:
         memory.add_message("assistant", result)
         return result
 
+    # Fast path for webcam photo capture
+    if any(k in p_lower for k in ["take a photo of me", "capture webcam photo", "take my photo", "take webcam photo", "take a picture of me", "camera photo", "take selfie", "capture photo from camera", "webcam photo"]):
+        result = take_webcam_photo()
+        memory.add_message("user", prompt)
+        memory.add_message("assistant", result)
+        return result
+
     # Fast path for Screenshot Capture
-    if any(k in p_lower for k in ["capture screenshot", "take a screenshot", "take screenshot", "capture the screen", "save screenshot", "take screen shot"]):
+    if any(k in p_lower for k in ["capture screenshot", "take a screenshot", "take screenshot", "capture the screen", "save screenshot", "take screen shot", "screenshot"]):
         result = take_screenshot()
         memory.add_message("user", prompt)
         memory.add_message("assistant", result)
         return result
+
+    # Multi-turn Active Document Q&A check
+    active_doc = get_active_document()
+    if active_doc and active_doc.get("path") and os.path.exists(active_doc["path"]):
+        system_triggers = ["open ", "close ", "screenshot", "weather", "volume", "lock screen", "mute", "shutdown", "exit", "quit"]
+        if not any(k in p_lower for k in system_triggers):
+            result = chat_with_active_document(prompt)
+            memory.add_message("user", prompt)
+            memory.add_message("assistant", result)
+            return result
 
     # Fast path for Opening Screenshots Folder / Locating Screenshots
     if any(k in p_lower for k in ["open screenshot", "open screenshots", "where is screenshot", "where is the screenshot", "where are screenshots", "where did you save", "where did she save"]):

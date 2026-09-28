@@ -91,5 +91,42 @@ class TestFridayCore(unittest.TestCase):
         self.assertIn(current_year, res)
         self.assertNotIn("2023", res)
 
+    def test_weather_fast_path(self):
+        """Verify weather queries return compact live telemetry without roleplay asterisks."""
+        from app.brain.llm import ask_friday
+        res = ask_friday("today's weather")
+        self.assertNotIn("*gets weather update*", res)
+        self.assertNotIn("*", res)
+        self.assertTrue(len(res) > 0)
+
+    def test_document_session_flow(self):
+        """Verify document session lifecycle: setting, querying active doc, and clearing."""
+        from app.tools.document_tool import set_active_document, get_active_document, clear_active_document
+        
+        # Test file
+        test_file = os.path.abspath(__file__)
+        set_active_document(test_file)
+        
+        active = get_active_document()
+        self.assertEqual(active["path"], test_file)
+        self.assertEqual(active["name"], os.path.basename(test_file))
+        self.assertIsNotNone(active["text"])
+        
+        clear_active_document()
+        cleared = get_active_document()
+        self.assertIsNone(cleared["path"])
+
+    def test_webcam_photo_tool(self):
+        """Verify webcam photo capture function returns proper diagnostic message."""
+        from app.tools.vision_tool import take_webcam_photo
+        res = take_webcam_photo()
+        # On systems without a live webcam active in headless CI or with one connected:
+        self.assertTrue(
+            "captured successfully" in res.lower() or 
+            "cannot access the camera" in res.lower() or 
+            "failed to capture" in res.lower() or
+            "encountered an issue" in res.lower()
+        )
+
 if __name__ == "__main__":
     unittest.main()

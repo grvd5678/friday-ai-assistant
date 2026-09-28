@@ -127,6 +127,15 @@ class FRIDAY_API:
             print(f"[File Selection Error] {e}")
         return ""
 
+    def clear_document_session(self):
+        """Clears the active document conversation session."""
+        try:
+            from app.tools.document_tool import clear_active_document
+            clear_active_document()
+            self.append_log("system", "Document conversation session closed.")
+        except Exception:
+            pass
+
     def process_user_query(self, query: str, file_path: str = None):
         """Processes typed or spoken command in background thread, with optional attached file."""
         if not query or self._is_busy:
@@ -135,13 +144,17 @@ class FRIDAY_API:
         def _worker():
             self._is_busy = True
             try:
-                display_msg = f"{query} [📎 {os.path.basename(file_path)}]" if file_path else query
+                from app.tools.document_tool import get_active_document, analyze_document, chat_with_active_document
+                active_doc = get_active_document()
+                doc_name = os.path.basename(file_path) if file_path else (active_doc.get("name") if active_doc else None)
+                display_msg = f"{query} [📎 {doc_name}]" if doc_name else query
                 self.update_status("THINKING", f'PROCESSING: "{display_msg}"')
                 self.append_log("user", display_msg)
 
                 if file_path and os.path.exists(file_path):
-                    from app.tools.document_tool import analyze_document
                     response = analyze_document(file_path, query)
+                elif active_doc and active_doc.get("path") and not any(k in query.lower() for k in ["open ", "close ", "screenshot", "weather", "volume", "lock screen", "mute"]):
+                    response = chat_with_active_document(query)
                 else:
                     response = ask_friday(query)
 
@@ -169,11 +182,19 @@ class FRIDAY_API:
                 self.update_status("LISTENING", "LISTENING FOR YOUR VOICE...")
                 query = listen()
                 if query:
-                    self.update_status("THINKING", f'PROCESSING: "{query}"')
-                    self.append_log("user", query)
-                    response = ask_friday(query)
+                    from app.tools.document_tool import get_active_document, chat_with_active_document
+                    active_doc = get_active_document()
+                    doc_name = active_doc.get("name") if active_doc else None
+                    display_msg = f"{query} [📎 {doc_name}]" if doc_name else query
+                    self.update_status("THINKING", f'PROCESSING: "{display_msg}"')
+                    self.append_log("user", display_msg)
+
+                    if active_doc and active_doc.get("path") and not any(k in query.lower() for k in ["open ", "close ", "screenshot", "weather", "volume", "lock screen", "mute"]):
+                        response = chat_with_active_document(query)
+                    else:
+                        response = ask_friday(query)
+
                     self.append_log("assistant", response)
-                    self.update_status("SPEAKING", response)
                     speak(response)
                 else:
                     self.update_status("STANDBY", "NO AUDIO DETECTED")

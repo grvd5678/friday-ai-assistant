@@ -108,6 +108,49 @@ def inspect_webcam(question: str = "What is the user doing in front of the camer
     except Exception as e:
         return f"Optical camera vision encountered an error: {str(e)}"
 
+def take_webcam_photo(filename: str = "") -> str:
+    """Captures a photo of the user from the laptop webcam and saves it directly to their Pictures folder."""
+    try:
+        import cv2
+        import time
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        if not cap.isOpened():
+            cap = cv2.VideoCapture(0)
+
+        if not cap.isOpened():
+            return "I cannot access the camera right now, Boss. Please make sure the webcam is connected."
+
+        # Let sensor warm up and settle exposure
+        frame = None
+        for _ in range(5):
+            ret, temp = cap.read()
+            if ret:
+                frame = temp
+            time.sleep(0.05)
+
+        cap.release()
+
+        if frame is None:
+            return "Camera opened, but failed to capture a clear visual frame, Boss."
+
+        user_profile = os.environ.get("USERPROFILE", os.path.expanduser("~"))
+        save_dir = os.path.join(user_profile, "Pictures", "Webcam")
+        os.makedirs(save_dir, exist_ok=True)
+        os.makedirs("screenshots", exist_ok=True)
+
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        f_name = filename.strip() if filename.strip() else f"webcam_{timestamp}.jpg"
+        if not f_name.endswith((".jpg", ".png")):
+            f_name += ".jpg"
+
+        save_path = os.path.join(save_dir, f_name)
+        cv2.imwrite(save_path, frame)
+        cv2.imwrite(os.path.join("screenshots", f_name), frame)
+
+        return f"Webcam photo captured successfully, Boss! Saved to your Pictures folder at: {save_path}"
+    except Exception as e:
+        return f"Encountered an issue capturing webcam photo: {str(e)}"
+
 if __name__ == "__main__":
     print(inspect_screen("What is on screen?"))
 
