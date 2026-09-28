@@ -91,6 +91,10 @@ def _local_rule_fallback(prompt: str) -> str:
     """Offline rule-based fallback execution if both Gemini and Ollama are unavailable."""
     p = prompt.lower().strip()
     
+    # Capabilities & Tasks
+    if any(k in p for k in ["what tasks can you do", "what can you do", "what are your capabilities", "what are your features", "what tasks you can do", "what all can you do", "what can friday do", "tell me what you can do", "list your capabilities"]):
+        return "I am your tactical AI assistant, Boss. I manage your applications, monitor hardware diagnostics, inspect your screen and camera, analyze documents and files, and execute custom automated work modes. What would you like to do?"
+
     # Datetime / Time
     if any(k in p for k in ["what time", "what date", "current time", "today's date", "day is it"]):
         return get_datetime_info()
@@ -265,6 +269,13 @@ def ask_friday(prompt: str) -> str:
     if p_lower.startswith("forget that ") or p_lower.startswith("forget "):
         query = prompt[7:].strip() if p_lower.startswith("forget ") else prompt[12:].strip()
         result = forget_memory(query)
+        memory.add_message("user", prompt)
+        memory.add_message("assistant", result)
+        return result
+
+    # Fast path for Capabilities & Tasks
+    if any(k in p_lower for k in ["what tasks can you do", "what can you do", "what are your capabilities", "what are your features", "what tasks you can do", "what all can you do", "what can friday do", "tell me what you can do", "list your capabilities"]):
+        result = "I am your tactical AI assistant, Boss. I manage your applications, monitor hardware diagnostics, inspect your screen and camera, analyze documents and files, and execute custom automated work modes. What would you like to do?"
         memory.add_message("user", prompt)
         memory.add_message("assistant", result)
         return result

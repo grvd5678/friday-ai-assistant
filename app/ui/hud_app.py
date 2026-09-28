@@ -80,22 +80,46 @@ class FRIDAY_API:
         if not self.window:
             return ""
         try:
-            try:
-                dialog_type = webview.FileDialog.OPEN
-            except AttributeError:
-                dialog_type = webview.OPEN_DIALOG
+            # 1. Try PyWebView native dialog with validated regex-safe filters
+            if self.window:
+                try:
+                    dialog_type = getattr(webview.FileDialog, "OPEN", 10)
+                    file_types = (
+                        "Supported Files (*.pdf;*.docx;*.doc;*.png;*.jpg;*.jpeg;*.webp;*.txt;*.py;*.csv)",
+                        "PDF Documents (*.pdf)",
+                        "Word Documents (*.docx;*.doc)",
+                        "Images (*.png;*.jpg;*.jpeg;*.webp)",
+                        "Text Documents (*.txt;*.py;*.csv;*.json;*.md)",
+                        "All Files (*.*)"
+                    )
+                    res = self.window.create_file_dialog(dialog_type, allow_multiple=False, file_types=file_types)
+                    if res and len(res) > 0:
+                        selected_path = res[0]
+                        file_name = os.path.basename(selected_path)
+                        self.append_log("system", f"Attached document: {file_name}")
+                        return selected_path
+                except Exception as we:
+                    print(f"[PyWebView Dialog Notice] {we}. Trying native fallback...")
 
-            file_types = (
-                "All Supported Files (*.pdf;*.docx;*.doc;*.png;*.jpg;*.jpeg;*.webp;*.txt;*.py;*.csv)",
-                "PDF Documents (*.pdf)",
-                "Word Documents (*.docx;*.doc)",
-                "Images (*.png;*.jpg;*.jpeg;*.webp)",
-                "Text & Code (*.txt;*.py;*.csv;*.json;*.md)",
-                "All Files (*.*)"
+            # 2. Rock-solid Tkinter native file dialog fallback
+            import tkinter as tk
+            from tkinter import filedialog
+            root = tk.Tk()
+            root.withdraw()
+            root.attributes('-topmost', True)
+            selected_path = filedialog.askopenfilename(
+                title="Select Document or Image for F.R.I.D.A.Y.",
+                filetypes=[
+                    ("Supported Files", "*.pdf *.docx *.doc *.png *.jpg *.jpeg *.webp *.txt *.py *.csv"),
+                    ("PDF Documents", "*.pdf"),
+                    ("Word Documents", "*.docx *.doc"),
+                    ("Images", "*.png *.jpg *.jpeg *.webp"),
+                    ("Text Files", "*.txt *.py *.csv *.json *.md"),
+                    ("All Files", "*.*")
+                ]
             )
-            res = self.window.create_file_dialog(dialog_type, allow_multiple=False, file_types=file_types)
-            if res and len(res) > 0:
-                selected_path = res[0]
+            root.destroy()
+            if selected_path:
                 file_name = os.path.basename(selected_path)
                 self.append_log("system", f"Attached document: {file_name}")
                 return selected_path
@@ -122,7 +146,6 @@ class FRIDAY_API:
                     response = ask_friday(query)
 
                 self.append_log("assistant", response)
-                self.update_status("SPEAKING", response)
                 speak(response)
 
             except Exception as e:

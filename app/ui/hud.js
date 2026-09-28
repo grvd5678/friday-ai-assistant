@@ -216,6 +216,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  const fileInput = document.getElementById("file-input");
+
   // File Attachment Handlers
   if (attachBtn) {
     attachBtn.addEventListener("click", () => {
@@ -223,8 +225,27 @@ document.addEventListener("DOMContentLoaded", () => {
         window.pywebview.api.select_file().then((selectedPath) => {
           if (selectedPath) {
             setAttachedFile(selectedPath);
+          } else if (fileInput) {
+            fileInput.click();
           }
+        }).catch(() => {
+          if (fileInput) fileInput.click();
         });
+      } else if (fileInput) {
+        fileInput.click();
+      }
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        const file = e.target.files[0];
+        if (file.path) {
+          setAttachedFile(file.path);
+        } else {
+          setAttachedFile(file.name);
+        }
       }
     });
   }

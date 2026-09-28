@@ -87,7 +87,6 @@ def speak(text: str):
 
     spoken_text = clean_speech_text(text)
     print(f"\n🤖 {config.BOT_NAME}: {text}\n")
-    _notify("speaking_start", text)
 
     unique_id = uuid.uuid4().hex[:8]
     temp_path = os.path.join(tempfile.gettempdir(), f"{config.BOT_NAME.lower()}_{unique_id}.mp3")
@@ -96,14 +95,16 @@ def speak(text: str):
         # Generate neural speech audio via Edge-TTS
         asyncio.run(_generate_audio(spoken_text, temp_path))
 
-        # Play generated MP3
+        # Play generated MP3 in perfect sync with HUD subtitle
         if os.path.exists(temp_path):
+            _notify("speaking_start", text)
             playsound(temp_path)
             
     except (KeyboardInterrupt, asyncio.CancelledError):
         print("\n[Speech interrupted]")
     except Exception as e:
         print(f"Edge-TTS Error ({e}). Activating offline female Windows TTS fallback...")
+        _notify("speaking_start", text)
         _fallback_windows_tts(spoken_text)
     finally:
         # Clean up temporary audio file safely

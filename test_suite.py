@@ -61,5 +61,12 @@ class TestFridayCore(unittest.TestCase):
         res = analyze_document("non_existent_file_12345.pdf", "What is this?")
         self.assertIn("cannot find the file", res.lower())
 
+    def test_capability_fast_path(self):
+        """Verify capabilities question returns immediate concise tactical overview."""
+        from app.brain.llm import ask_friday
+        res = ask_friday("what tasks can you do")
+        self.assertIn("tactical AI assistant", res)
+        self.assertIn("Boss", res)
+
 if __name__ == "__main__":
     unittest.main()

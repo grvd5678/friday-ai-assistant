@@ -173,10 +173,11 @@
 
       <!-- Quick Command Input -->
       <div class="command-bar">
-        <button id="attach-btn" class="hud-btn attach-btn" title="Attach Document (PDF, DOCX, PNG, Images, Text)">📎</button>
+        <input type="file" id="file-input" style="display: none;" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.webp,.txt,.py,.csv" />
+        <button id="attach-btn" type="button" class="hud-btn attach-btn" title="Attach Document (PDF, DOCX, PNG, Images, Text)">📎</button>
         <input type="text" id="cmd-input" placeholder="Type a command or attach file (PDF, DOCX, PNG)..." autocomplete="off" />
-        <button id="mic-btn" class="hud-btn" title="Toggle Voice Recognition">🎙️</button>
-        <button id="send-btn" class="hud-btn" title="Send Command">⚡</button>
+        <button id="mic-btn" type="button" class="hud-btn" title="Toggle Voice Recognition">🎙️</button>
+        <button id="send-btn" type="button" class="hud-btn" title="Send Command">⚡</button>
       </div>
 
     </footer>
