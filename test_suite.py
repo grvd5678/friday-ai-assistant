@@ -68,5 +68,20 @@ class TestFridayCore(unittest.TestCase):
         self.assertIn("tactical AI assistant", res)
         self.assertIn("Boss", res)
 
+    def test_prepare_spoken_summary(self):
+        """Verify that long resume or markdown text is distilled into a crisp 1-2 sentence spoken summary."""
+        from app.audio.speaker import prepare_spoken_summary
+        long_resume = (
+            "Top of the morning to you, Boss. I have your resume locked in and scanned–looks like "
+            "you've been putting together quite a tidy profile in AI and Cloud Engineering. "
+            "Here is the breakdown: ### **CANDIDATE OVERVIEW** * **NAME:** Gourav Das * **ROLE:** AI Engineer "
+            "--- ### **PROJECTS** 1. RAG Assistant. 2. Fake News Detection. 3. Blockchain."
+        )
+        summary = prepare_spoken_summary(long_resume)
+        self.assertLess(len(summary.split()), 45)
+        self.assertIn("Tactical Feed", summary)
+        self.assertNotIn("###", summary)
+        self.assertNotIn("**", summary)
+
 if __name__ == "__main__":
     unittest.main()

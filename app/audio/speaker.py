@@ -41,17 +41,81 @@ def clean_speech_text(text: str) -> str:
     cleaned = re.sub(r'_([^_]+)_', r'\1', cleaned)
     # Remove header hashes
     cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
+    # Remove horizontal rules
+    cleaned = re.sub(r'^\s*[-*_]{3,}\s*$', '', cleaned, flags=re.MULTILINE)
+    # Remove table pipes
+    cleaned = re.sub(r'\|', ' ', cleaned)
     # Remove bullet symbols
     cleaned = re.sub(r'^\s*[\*\-\+]\s+', '', cleaned, flags=re.MULTILINE)
     # Remove extra whitespace
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
     return cleaned
 
+def prepare_spoken_summary(text: str) -> str:
+    """
+    Distills long, markdown-heavy, or document analysis responses into a crisp 1-2 sentence
+    spoken executive summary for fast TTS audio generation (1-2s response time) and clean
+    subtitle presentation that never covers HUD controls.
+    """
+    if not text or not text.strip():
+        return ""
+
+    raw = text.strip()
+    words = raw.split()
+
+    # If the text is already punchy and simple without markdown sections or lists
+    has_markdown_sections = bool(re.search(r'(#{1,6}\s+|^\s*[\*\-\+]\s+|---|\|)', raw, flags=re.MULTILINE))
+    if len(words) <= 35 and len(raw) <= 240 and not has_markdown_sections:
+        return clean_speech_text(raw)
+
+    # 1. Extract the introductory opening paragraph before the first section header, HR, or bullet list
+    split_match = re.search(r'(?:\n\s*#{1,6}\s+|\n\s*---\s*|\n\s*[\*\-\+]\s+|\n\s*\|)', raw)
+    if split_match:
+        intro = raw[:split_match.start()].strip()
+    else:
+        intro = raw
+
+    cleaned_intro = clean_speech_text(intro)
+
+    # 2. Extract first 1-2 complete sentences
+    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', cleaned_intro) if s.strip()]
+    if sentences:
+        spoken_parts = []
+        char_count = 0
+        for s in sentences[:2]:
+            if char_count + len(s) > 220:
+                break
+            s_clean = s.rstrip(':').strip()
+            spoken_parts.append(s_clean)
+            char_count += len(s)
+
+        res = " ".join(spoken_parts).strip()
+        if res.endswith(':'):
+            res = res[:-1].strip()
+        if not res.endswith(('.', '!', '?')):
+            res += "."
+
+        # If original text had markdown sections or was long, add tactical feed notice if not already present
+        if len(words) > 40 or has_markdown_sections:
+            if "tactical feed" not in res.lower() and "feed" not in res.lower():
+                res += " I've displayed the complete tactical dossier in your Tactical Feed, Boss."
+        return res
+
+    return "I have analyzed the data and displayed the complete tactical dossier in your Tactical Feed, Boss."
+
 async def _generate_audio(text: str, file_path: str):
-    """Generates speech file using Edge-TTS neural female voice."""
-    voice = config.VOICE_NAME or "en-US-AriaNeural"
-    communicate = edge_tts.Communicate(text, voice)
-    await communicate.save(file_path)
+    """Generates speech file using Edge-TTS neural female voice with quick retry."""
+    voice = config.VOICE_NAME or "en-IE-EmilyNeural"
+    for attempt in range(2):
+        try:
+            communicate = edge_tts.Communicate(text, voice)
+            await communicate.save(file_path)
+            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                return
+        except Exception:
+            if attempt == 1:
+                raise
+            await asyncio.sleep(0.3)
 
 def _fallback_windows_tts(text: str):
     """Offline TTS fallback using Windows SAPI SpeechSynthesizer with strictly female voice."""
@@ -73,8 +137,8 @@ def _fallback_windows_tts(text: str):
     except Exception as e:
         print(f"[Offline TTS Fallback Error]: {e}")
 
-def speak(text: str):
-    """Plays generated speech with markdown cleanup, lock prevention, and female voice guarantee."""
+def speak(text: str, spoken_text: str = None):
+    """Plays generated speech with fast executive summary, lock prevention, and female voice guarantee."""
     if not text or not text.strip():
         return
 
@@ -85,27 +149,33 @@ def speak(text: str):
     except Exception:
         pass
 
-    spoken_text = clean_speech_text(text)
-    print(f"\n🤖 {config.BOT_NAME}: {text}\n")
+    # Determine concise spoken sentence for fast 1-2s audio generation
+    speech_line = spoken_text if spoken_text else prepare_spoken_summary(text)
+    clean_line = clean_speech_text(speech_line)
+
+    try:
+        print(f"\n🤖 {config.BOT_NAME}: {clean_line}\n")
+    except Exception:
+        print(f"\n[{config.BOT_NAME}]: {clean_line}\n")
 
     unique_id = uuid.uuid4().hex[:8]
     temp_path = os.path.join(tempfile.gettempdir(), f"{config.BOT_NAME.lower()}_{unique_id}.mp3")
 
     try:
-        # Generate neural speech audio via Edge-TTS
-        asyncio.run(_generate_audio(spoken_text, temp_path))
+        # Generate neural speech audio via Edge-TTS (fast 1-2s generation for concise lines)
+        asyncio.run(_generate_audio(clean_line, temp_path))
 
         # Play generated MP3 in perfect sync with HUD subtitle
         if os.path.exists(temp_path):
-            _notify("speaking_start", text)
+            _notify("speaking_start", clean_line)
             playsound(temp_path)
             
     except (KeyboardInterrupt, asyncio.CancelledError):
         print("\n[Speech interrupted]")
     except Exception as e:
         print(f"Edge-TTS Error ({e}). Activating offline female Windows TTS fallback...")
-        _notify("speaking_start", text)
-        _fallback_windows_tts(spoken_text)
+        _notify("speaking_start", clean_line)
+        _fallback_windows_tts(clean_line)
     finally:
         # Clean up temporary audio file safely
         if os.path.exists(temp_path):
