@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 title F.R.I.D.A.Y. AI Assistant
 echo Starting F.R.I.D.A.Y. Holographic Tactical HUD...
 set PYTHONIOENCODING=utf-8
