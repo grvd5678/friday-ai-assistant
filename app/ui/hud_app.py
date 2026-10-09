@@ -19,6 +19,7 @@ from app.brain.llm import ask_friday
 from app.audio.speaker import speak, set_speech_callback
 from app.audio.listener import listen, set_listener_callback
 from app.audio.wakeword import wake_listener
+from app.brain.greetings import get_startup_greeting, get_wake_acknowledgment, get_arrival_greeting
 
 _global_api = None
 
@@ -287,7 +288,7 @@ def launch_hud():
         else:
             # User greeted F.R.I.D.A.Y. ("Hello", "Hey Friday") -> respond and activate mic
             def _greet_and_listen():
-                reply = "Yes Boss? I'm listening."
+                reply = get_wake_acknowledgment()
                 api.update_status("SPEAKING", reply)
                 api.append_log("assistant", reply)
                 speak(reply)
@@ -300,9 +301,9 @@ def launch_hud():
     try:
         from app.vision.face_presence import face_presence
         def on_user_arrival():
-            greeting = "Welcome back to your workstation, Boss. Systems standing by."
+            greeting = get_arrival_greeting()
             api.update_status("SPEAKING", greeting)
-            api.append_log("system", "[PRESENCE] Welcome back, Boss.")
+            api.append_log("system", f"[PRESENCE] {greeting}")
             speak(greeting)
 
         face_presence.start(on_arrival=on_user_arrival)
@@ -332,7 +333,7 @@ def launch_hud():
     # Initial greeting speech in separate thread
     def _greet():
         time.sleep(2)
-        greeting = f"{config.BOT_NAME} system online and operational. How may I assist you today, Boss?"
+        greeting = get_startup_greeting()
         api.update_status("SPEAKING", greeting)
         api.append_log("system", greeting)
         speak(greeting)

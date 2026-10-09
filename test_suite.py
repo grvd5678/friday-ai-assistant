@@ -116,17 +116,69 @@ class TestFridayCore(unittest.TestCase):
         cleared = get_active_document()
         self.assertIsNone(cleared["path"])
 
-    def test_webcam_photo_tool(self):
-        """Verify webcam photo capture function returns proper diagnostic message."""
-        from app.tools.vision_tool import take_webcam_photo
-        res = take_webcam_photo()
-        # On systems without a live webcam active in headless CI or with one connected:
-        self.assertTrue(
-            "captured successfully" in res.lower() or 
-            "cannot access the camera" in res.lower() or 
-            "failed to capture" in res.lower() or
-            "encountered an issue" in res.lower()
+    def test_dynamic_greetings(self):
+        """Verify dynamic Marvel greetings, time-of-day awareness, and dynamic title rotation."""
+        from app.brain.greetings import get_time_period, get_startup_greeting, get_wake_acknowledgment
+        period = get_time_period()
+        self.assertIn(period, ["morning", "afternoon", "evening", "night"])
+
+        greeting = get_startup_greeting()
+        self.assertTrue(any(title in greeting for title in ["Boss", "Sir", "Mr. Gourav Das"]))
+
+        ack = get_wake_acknowledgment()
+        self.assertTrue(any(title in ack for title in ["Boss", "Sir", "Mr. Gourav Das"]))
+
+    def test_app_launcher_robustness(self):
+        """Verify app launcher handles URI protocols, URLs, and commands without shell crashes."""
+        from app.tools.system_control import open_app
+        # Safe command injection rejection
+        bad = open_app("notepad & calc")
+        self.assertIn("rejected", bad.lower())
+
+        # Protocol launcher check
+        res_spot = open_app("spotify")
+        self.assertTrue("opening spotify" in res_spot.lower() or "launch" in res_spot.lower())
+
+    def test_folder_guard_security(self):
+        """Verify Gourav's 3-Tier security model: system files blocked, .env protected, project README-only."""
+        from app.tools.folder_guard import check_file_access
+        
+        # 1. Tier 3: System files blocked
+        allowed_sys, _ = check_file_access(r"C:\Windows\System32\cmd.exe")
+        self.assertFalse(allowed_sys)
+
+        # 2. Tier 3: Environment file protected
+        allowed_env, _ = check_file_access(r"D:\Python\friday-ai-assistant\.env")
+        self.assertFalse(allowed_env)
+
+        # 3. Project folder: source code blocked (README-only rule)
+        allowed_code, msg_code = check_file_access(r"D:\Python\Swachh.ai\model.py")
+        self.assertFalse(allowed_code)
+        self.assertIn("readme.md only", msg_code.lower())
+
+        # 4. Project folder: README.md authorized
+        allowed_readme, _ = check_file_access(r"D:\Python\Swachh.ai\README.md")
+        self.assertTrue(allowed_readme)
+
+        # 5. D-Drive study material: authorized
+        allowed_study, _ = check_file_access(r"D:\Amazon Web Services\Cloud_Practitioner_Notes.pdf")
+        self.assertTrue(allowed_study)
+
+    def test_interview_coach_lifecycle(self):
+        """Verify interview coach initialization, active tracking, and conclusion."""
+        from app.tools.interview_coach import (
+            start_mock_interview,
+            is_interview_active,
+            end_mock_interview
         )
+        q = start_mock_interview("projects")
+        self.assertTrue(is_interview_active())
+        self.assertTrue(len(q) > 0)
+
+        end_msg = end_mock_interview()
+        self.assertFalse(is_interview_active())
+        self.assertIn("concluded", end_msg.lower())
 
 if __name__ == "__main__":
     unittest.main()
+

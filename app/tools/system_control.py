@@ -3,55 +3,57 @@ import subprocess
 import ctypes
 import pyautogui
 
-# Comprehensive Windows application & URI protocol registry
+import webbrowser
+
+# Comprehensive Windows application, URL & URI protocol registry
 APP_MAP = {
     # Social & Messaging
-    "whatsapp": 'start "" "whatsapp:"',
-    "whatsapp desktop": 'start "" "whatsapp:"',
-    "telegram": 'start "" "telegram:"',
-    "discord": 'start "" "discord:"',
+    "whatsapp": ("uri", "whatsapp:"),
+    "whatsapp desktop": ("uri", "whatsapp:"),
+    "telegram": ("uri", "telegram:"),
+    "discord": ("uri", "discord:"),
     
     # Music & Media
-    "spotify": 'start "" "spotify:"',
-    "youtube": 'start https://www.youtube.com',
-    "netflix": 'start "" "netflix:"',
+    "spotify": ("uri", "spotify:"),
+    "youtube": ("url", "https://www.youtube.com"),
+    "netflix": ("url", "https://www.netflix.com"),
     
     # Browsers
-    "chrome": 'start chrome',
-    "google chrome": 'start chrome',
-    "edge": 'start msedge',
-    "microsoft edge": 'start msedge',
-    "firefox": 'start firefox',
-    "brave": 'start brave',
+    "chrome": ("cmd", "chrome"),
+    "google chrome": ("cmd", "chrome"),
+    "edge": ("cmd", "msedge"),
+    "microsoft edge": ("cmd", "msedge"),
+    "firefox": ("cmd", "firefox"),
+    "brave": ("cmd", "brave"),
     
     # Developer & Productivity
-    "code": 'code',
-    "vscode": 'code',
-    "vs code": 'code',
-    "visual studio code": 'code',
-    "notepad": 'notepad',
-    "calculator": 'calc',
-    "calc": 'calc',
-    "paint": 'mspaint',
-    "word": 'start winword',
-    "excel": 'start excel',
-    "powerpoint": 'start powerpnt',
+    "code": ("cmd", "code"),
+    "vscode": ("cmd", "code"),
+    "vs code": ("cmd", "code"),
+    "visual studio code": ("cmd", "code"),
+    "notepad": ("cmd", "notepad"),
+    "calculator": ("cmd", "calc"),
+    "calc": ("cmd", "calc"),
+    "paint": ("cmd", "mspaint"),
+    "word": ("cmd", "winword"),
+    "excel": ("cmd", "excel"),
+    "powerpoint": ("cmd", "powerpnt"),
     
     # Windows System Tools & Folders
-    "explorer": 'explorer',
-    "file explorer": 'explorer',
-    "files": 'explorer',
-    "downloads": 'explorer shell:Downloads',
-    "documents": 'explorer shell:Personal',
-    "desktop": 'explorer shell:Desktop',
-    "settings": 'start ms-settings:',
-    "task manager": 'taskmgr',
-    "taskmgr": 'taskmgr',
-    "camera": 'start microsoft.windows.camera:',
-    "terminal": 'start wt',
-    "cmd": 'start cmd',
-    "command prompt": 'start cmd',
-    "powershell": 'start powershell'
+    "explorer": ("cmd", "explorer"),
+    "file explorer": ("cmd", "explorer"),
+    "files": ("cmd", "explorer"),
+    "downloads": ("folder", "shell:Downloads"),
+    "documents": ("folder", "shell:Personal"),
+    "desktop": ("folder", "shell:Desktop"),
+    "settings": ("uri", "ms-settings:"),
+    "task manager": ("cmd", "taskmgr"),
+    "taskmgr": ("cmd", "taskmgr"),
+    "camera": ("uri", "microsoft.windows.camera:"),
+    "terminal": ("cmd", "wt"),
+    "cmd": ("cmd", "cmd"),
+    "command prompt": ("cmd", "cmd"),
+    "powershell": ("cmd", "powershell")
 }
 
 # Process mapping for closing apps
@@ -84,29 +86,37 @@ def open_app(app_name: str) -> str:
         return f"Launch request for '{app_name}' rejected due to invalid characters, Boss."
 
     # 1. Exact match in allowlist
-    target_cmd = APP_MAP.get(clean)
+    target_entry = APP_MAP.get(clean)
     
     # 2. Substring matching in allowlist
-    if not target_cmd:
-        for key, cmd in APP_MAP.items():
+    if not target_entry:
+        for key, entry in APP_MAP.items():
             if key in clean:
-                target_cmd = cmd
+                target_entry = entry
                 break
 
-    if target_cmd:
+    if target_entry:
+        kind, target = target_entry
         try:
-            if target_cmd.startswith("http://") or target_cmd.startswith("https://") or target_cmd.endswith(".exe"):
-                os.startfile(target_cmd)
-            else:
-                subprocess.Popen(target_cmd.split(), shell=False)
-            return f"Opening {app_name} for you now, Boss."
-        except Exception:
-            try:
-                os.startfile(target_cmd)
+            if kind == "url":
+                webbrowser.open(target)
                 return f"Opening {app_name} for you now, Boss."
-            except Exception as e:
-                return f"Could not launch {app_name}: {str(e)}"
+            elif kind == "uri":
+                try:
+                    os.startfile(target)
+                except Exception:
+                    subprocess.Popen(f'start "" "{target}"', shell=True)
+                return f"Opening {app_name} for you now, Boss."
+            elif kind == "folder":
+                subprocess.Popen(f'explorer {target}', shell=True)
+                return f"Opening {app_name} folder for you now, Boss."
+            elif kind == "cmd":
+                subprocess.Popen(target, shell=True)
+                return f"Opening {app_name} for you now, Boss."
+        except Exception as e:
+            return f"Could not launch {app_name}: {str(e)}"
 
+    # Fallback to direct Windows launch
     try:
         os.startfile(clean)
         return f"Attempting to launch {app_name}, Boss."

@@ -107,9 +107,15 @@ def analyze_document(file_path: str, query: str = "Please summarize the key cont
     Analyzes an uploaded or referenced document (PDF, Word DOCX, PNG/JPG image, or text file)
     using Gemini multimodal intelligence with local fallback.
     """
+    from app.tools.folder_guard import check_file_access
     clean_path = file_path.strip().strip('"').strip("'")
     if not os.path.exists(clean_path):
         return f"I cannot find the file at '{file_path}', Boss. Please verify the path."
+
+    # Validate against FolderGuard security policy
+    allowed, security_msg = check_file_access(clean_path, mode="r")
+    if not allowed:
+        return security_msg
 
     set_active_document(clean_path)
     ext = os.path.splitext(clean_path)[1].lower()

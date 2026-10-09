@@ -14,6 +14,7 @@ from app.brain.llm import ask_friday
 from app.audio.speaker import speak
 from app.audio.listener import listen
 from app.audio.wakeword import wake_listener
+from app.brain.greetings import get_startup_greeting, get_wake_acknowledgment
 
 def run_cli():
     """Runs FRIDAY in interactive terminal mode."""
@@ -21,7 +22,7 @@ def run_cli():
     print(f"🤖 {config.BOT_NAME} 3.0 SYSTEM ONLINE & OPERATIONAL (CLI MODE)")
     print("="*58 + "\n")
     
-    greeting = f"{config.BOT_NAME} system online and operational. How may I assist you today, Boss?"
+    greeting = get_startup_greeting()
     speak(greeting)
 
     # Start wake word listener in background
@@ -34,7 +35,8 @@ def run_cli():
             reply = ask_friday(phrase)
             speak(reply)
         else:
-            speak("Yes Boss, I'm listening.")
+            ack = get_wake_acknowledgment()
+            speak(ack)
             voice_query = listen()
             if voice_query:
                 print(f"⚡ Processing: '{voice_query}'...")

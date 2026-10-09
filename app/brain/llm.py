@@ -25,12 +25,21 @@ from app.tools.modes import activate_developer_mode, activate_movie_mode, activa
 from app.tools.file_tool import find_files, organize_folder, open_folder
 from app.audio.live_stream import start_live_mode, stop_live_mode
 from app.vision.face_presence import check_user_present
+from app.brain.greetings import get_startup_greeting, get_wake_acknowledgment, get_random_title
+from app.tools.interview_coach import (
+    start_mock_interview,
+    evaluate_interview_answer,
+    end_mock_interview,
+    is_interview_active
+)
 
 # Registered action tools for autonomous function calling
 FRIDAY_TOOLS = [
     open_app,
     close_app,
     analyze_document,
+    start_mock_interview,
+    evaluate_interview_answer,
     get_system_stats,
     get_battery_status,
     get_datetime_info,
@@ -305,10 +314,49 @@ def ask_friday(prompt: str) -> str:
 
     # Fast path for Capabilities & Tasks
     if any(k in p_lower for k in ["what tasks can you do", "what can you do", "what are your capabilities", "what are your features", "what tasks you can do", "what all can you do", "what can friday do", "tell me what you can do", "list your capabilities"]):
-        result = "I am your tactical AI assistant, Boss. I manage your applications, monitor hardware diagnostics, inspect your screen and camera, analyze documents and files, and execute custom automated work modes. What would you like to do?"
+        result = "I am your tactical AI assistant, Boss. I manage your applications, monitor hardware diagnostics, inspect your screen and camera, analyze documents and resumes, conduct personalized mock interviews, and execute custom automated work modes. What would you like to do?"
         memory.add_message("user", prompt)
         memory.add_message("assistant", result)
         return result
+
+    # Dynamic Marvel-style Greetings & Time-aware Salutations
+    if p_lower in ["hello", "hey", "hi", "hey friday", "hello friday", "hi friday", "good morning", "good afternoon", "good evening", "good night"] or any(p_lower.startswith(k) for k in ["good morning", "good afternoon", "good evening", "good night"]):
+        result = get_startup_greeting()
+        memory.add_message("user", prompt)
+        memory.add_message("assistant", result)
+        return result
+
+    # Stop / Conclude Mock Interview
+    if any(k in p_lower for k in ["end interview", "stop interview", "conclude interview", "finish interview", "quit interview", "exit interview"]):
+        result = end_mock_interview()
+        memory.add_message("user", prompt)
+        memory.add_message("assistant", result)
+        return result
+
+    # Start Mock Interview Coach
+    if any(k in p_lower for k in ["start mock interview", "start interview", "mock interview", "interview me", "practice interview", "conduct interview", "test me on aws", "test me on ml", "placement interview", "placement paper"]):
+        topic = "projects"
+        if "aws" in p_lower or "cloud" in p_lower:
+            topic = "aws"
+        elif "ml" in p_lower or "machine learning" in p_lower:
+            topic = "machine learning"
+        elif any(k in p_lower for k in ["placement", "tcs", "wipro", "accenture", "aptitude"]):
+            topic = "placement"
+        elif "behavioral" in p_lower or "hr" in p_lower:
+            topic = "behavioral"
+        result = start_mock_interview(topic)
+        memory.add_message("user", prompt)
+        memory.add_message("assistant", result)
+        return result
+
+    # Active Mock Interview Ongoing Answers
+    if is_interview_active():
+        system_triggers = ["open ", "close ", "screenshot", "weather", "volume", "lock screen", "mute", "shutdown", "exit", "quit", "what time", "today"]
+        if not any(k in p_lower for k in system_triggers):
+            result = evaluate_interview_answer(prompt)
+            memory.add_message("user", prompt)
+            memory.add_message("assistant", result)
+            return result
 
     # Fast path for Screen Vision
     if any(k in p_lower for k in ["look at my screen", "what am i looking at", "what's on my screen", "inspect my screen", "check my screen", "read my screen", "analyze my screen", "what is on screen"]):
