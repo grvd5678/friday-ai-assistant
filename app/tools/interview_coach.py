@@ -6,10 +6,17 @@ using Gourav's resume, project READMEs, AWS study notes, and placement papers.
 """
 
 import os
-import random
 from app.config import config
 from app.tools.folder_guard import check_file_access
 from google import genai
+
+_client = None
+
+def _get_client():
+    global _client
+    if _client is None and config.GEMINI_API_KEY:
+        _client = genai.Client(api_key=config.GEMINI_API_KEY)
+    return _client
 
 # Session state for active interview practice
 _interview_state = {
@@ -103,7 +110,7 @@ def start_mock_interview(topic: str = "projects") -> str:
     )
 
     try:
-        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        client = _get_client()
         response = client.models.generate_content(
             model=config.GEMINI_MODEL,
             contents=[tactical_prompt]
@@ -141,7 +148,7 @@ def evaluate_interview_answer(answer: str) -> str:
     )
 
     try:
-        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        client = _get_client()
         response = client.models.generate_content(
             model=config.GEMINI_MODEL,
             contents=[eval_prompt]

@@ -105,13 +105,22 @@ def _get_gemini_chat():
             _gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
             full_system_instruction = _build_live_system_instruction()
 
+            # Seed chat with recent conversation history for continuity
+            history = memory.get_history()[-10:]
+            seed_history = [
+                types.Content(role=msg["role"], parts=[types.Part(text=msg["content"])])
+                for msg in history
+                if msg.get("role") in ("user", "model") and msg.get("content")
+            ]
+
             _gemini_chat = _gemini_client.chats.create(
                 model=config.GEMINI_MODEL,
                 config=types.GenerateContentConfig(
                     system_instruction=full_system_instruction,
                     tools=FRIDAY_TOOLS,
                     temperature=0.7,
-                )
+                ),
+                history=seed_history if seed_history else None
             )
         except Exception as e:
             print(f"[Gemini Init Error] {e}")
@@ -120,152 +129,35 @@ def _get_gemini_chat():
     return _gemini_chat
 
 def _local_rule_fallback(prompt: str) -> str:
-    """Offline rule-based fallback execution if both Gemini and Ollama are unavailable."""
+    """Offline rule-based fallback for core system controls when Gemini and Ollama are unavailable."""
     p = prompt.lower().strip()
-    
-    # Capabilities & Tasks
-    if any(k in p for k in ["what tasks can you do", "what can you do", "what are your capabilities", "what are your features", "what tasks you can do", "what all can you do", "what can friday do", "tell me what you can do", "list your capabilities"]):
-        return "I am your tactical AI assistant, Boss. I manage your applications, monitor hardware diagnostics, inspect your screen and camera, analyze documents and files, and execute custom automated work modes. What would you like to do?"
 
-    # Datetime / Time / Today
-    if any(k in p for k in ["tell me today", "what about today", "how is today", "what is today", "today's date", "todays date", "what day is it", "what date", "current date", "what time", "current time"]) or p in ["today", "what is today?", "today date"]:
-        dt = get_datetime_info()
-        try:
-            weather = get_weather()
-            return f"Boss! {dt} {weather}"
-        except Exception:
-            return f"Boss! {dt}"
-
-    # System stats & Hardware
-    if any(k in p for k in ["system stat", "cpu", "ram", "hardware", "diagnostic"]):
-        return get_system_stats()
-    
-    # Battery
     if "battery" in p:
         return get_battery_status()
-
-    # Screenshot
+    if any(k in p for k in ["system stat", "cpu", "ram", "hardware", "diagnostic"]):
+        return get_system_stats()
     if "screenshot" in p or "screen shot" in p:
         return take_screenshot()
-
-    # Lock workstation
     if any(k in p for k in ["lock screen", "lock workstation", "lock pc", "lock computer"]):
         return lock_screen()
+    if "mute" in p:
+        return change_volume("mute")
+    if any(k in p for k in ["volume up", "increase volume", "raise volume"]):
+        return change_volume("up")
+    if any(k in p for k in ["volume down", "decrease volume", "lower volume"]):
+        return change_volume("down")
+    if any(k in p for k in ["next track", "next song", "skip"]):
+        return media_control("next")
+    if any(k in p for k in ["prev track", "previous song"]):
+        return media_control("prev")
 
-    # Volume control
-    if any(k in p for k in ["volume", "mute", "unmute"]):
-        if "mute" in p:
-            return change_volume("mute")
-        elif any(k in p for k in ["up", "increase", "raise"]):
-            return change_volume("up")
-        elif any(k in p for k in ["down", "decrease", "lower"]):
-            return change_volume("down")
-
-    # Media control
-    if any(k in p for k in ["pause", "resume song", "play music", "next song", "next track", "skip"]):
-        if any(k in p for k in ["next", "skip"]):
-            return media_control("next")
-        elif any(k in p for k in ["prev", "back"]):
-            return media_control("prev")
-        else:
-            return media_control("play")
-
-    # Weather
-    if "weather" in p:
-        loc_match = re.search(r"weather (?:in|for|at) (.+)", p)
-        target_city = loc_match.group(1).strip() if loc_match else ""
-        return get_weather(target_city)
-
-    # Close app
     close_match = re.search(r"close (?:app )?([a-zA-Z0-9\s]+)", p)
     if close_match:
-        target_app = close_match.group(1).strip()
-        return close_app(target_app)
+        return close_app(close_match.group(1).strip())
 
-    # Open app
     open_match = re.search(r"(?:open|launch|start) (?:app )?([a-zA-Z0-9\s]+)", p)
     if open_match:
-        target_app = open_match.group(1).strip()
-        return open_app(target_app)
-
-    # YouTube
-    yt_match = re.search(r"(?:play|search) (.+) on youtube", p)
-    if yt_match:
-        return play_youtube(yt_match.group(1))
-
-    # Wikipedia lookup
-    wiki_match = re.search(r"(?:who is|what is|tell me about) (.+)", p)
-    if wiki_match:
-        return get_wikipedia_summary(wiki_match.group(1))
-
-    # Web search
-    search_match = re.search(r"(?:search|google) (.+)", p)
-    if search_match:
-        return search_web(search_match.group(1))
-
-    # Remember fact
-    if p.startswith("remember that ") or p.startswith("remember "):
-        fact = prompt[9:].strip() if p.startswith("remember ") else prompt[14:].strip()
-        return remember_fact(fact)
-
-    # Forget fact
-    if p.startswith("forget that ") or p.startswith("forget "):
-        query = prompt[7:].strip() if p.startswith("forget ") else prompt[12:].strip()
-        return forget_memory(query)
-
-    # Recall fact
-    if any(k in p for k in ["what do you remember", "recall", "memory"]):
-        return recall_memories(prompt)
-
-    # Screen Vision
-    if any(k in p for k in ["look at my screen", "what am i looking at", "what's on my screen", "inspect screen", "check my screen", "read my screen", "what is on screen"]):
-        return inspect_screen(prompt)
-
-    # Morning Tactical Briefing
-    if any(k in p for k in ["morning briefing", "daily briefing", "tactical briefing", "brief me", "good morning"]):
-        return get_morning_briefing()
-
-    # Tactical Work Modes
-    if any(k in p for k in ["developer mode", "dev mode", "coding mode"]):
-        return activate_developer_mode()
-    if any(k in p for k in ["movie mode", "cinema mode"]):
-        return activate_movie_mode()
-    if any(k in p for k in ["lockdown", "protocol lockdown", "lock down"]):
-        return activate_lockdown_mode()
-    if any(k in p for k in ["focus mode", "deep work"]):
-        return activate_focus_mode()
-
-    # File & Folder Management
-    if "organize" in p and any(k in p for k in ["download", "desktop", "folder"]):
-        target = "Downloads" if "download" in p else ("Desktop" if "desktop" in p else "Downloads")
-        return organize_folder(target)
-
-    if any(k in p for k in ["open folder", "open downloads", "open documents", "open desktop"]):
-        target = "Downloads" if "download" in p else ("Desktop" if "desktop" in p else "Documents")
-        return open_folder(target)
-
-    if any(k in p for k in ["find pdf", "find file", "search file", "look for file"]):
-        ext = "pdf" if "pdf" in p else ""
-        return find_files(extension=ext, folder="Downloads")
-
-    # Floating Arc-Reactor Widget Toggle
-    if any(k in p for k in ["widget mode", "mini widget", "floating widget", "compact widget", "expand hud", "restore hud", "full dashboard"]):
-        try:
-            from app.ui.hud_app import toggle_hud_widget
-            is_mini = toggle_hud_widget()
-            return "Switching to floating Arc-Reactor widget mode, Boss." if is_mini else "Restoring full tactical HUD interface, Boss."
-        except Exception:
-            return "HUD widget toggle commanded, Boss."
-
-    # Gemini Live Streaming Mode
-    if any(k in p for k in ["start live mode", "activate live mode", "live stream", "live voice mode"]):
-        return start_live_mode()
-    if any(k in p for k in ["stop live mode", "exit live mode", "deactivate live mode"]):
-        return stop_live_mode()
-
-    # Face Presence Scan
-    if any(k in p for k in ["can you see me", "scan my face", "am i visible", "detect face", "look for me"]):
-        return check_user_present()
+        return open_app(open_match.group(1).strip())
 
     return "I heard you, Boss. All local offline systems are standing by."
 

@@ -103,11 +103,17 @@
           <div class="particle p3"></div>
           <div class="particle p4"></div>
 
-          <!-- Central Holographic Face Avatar -->
-          <div class="hologram-avatar-container" id="avatar-container">
+          <!-- Volumetric Hologram Light Projector Cone -->
+          <div class="holo-projector-cone"></div>
+
+          <!-- Central Holographic Face Avatar with Multi-Layer 3D Depth -->
+          <div class="hologram-avatar-container booting" id="avatar-container">
             <div class="holo-energy-backdrop"></div>
+            <div class="holo-scanlines-overlay"></div>
+            <div class="holo-fresnel-rim"></div>
             <img src="friday_face_f0.png" alt="FRIDAY Holographic Core" class="hologram-avatar" id="friday-avatar" />
             <div class="holo-scanline-beam"></div>
+            <div class="holo-flare-ring"></div>
             <div class="avatar-tag">F.R.I.D.A.Y. CORE</div>
           </div>
         </div>
@@ -117,10 +123,11 @@
       <aside class="right-panel">
         <div class="panel-header">TACTICAL FEED</div>
         <div class="tactical-log" id="tactical-log">
-          <div class="log-entry system">[BOOT] Core modules initialized.</div>
-          <div class="log-entry system">[AI] Gemini 3.5 Flash connected.</div>
-          <div class="log-entry system">[TTS] Emily Neural voice loaded.</div>
-          <div class="log-entry user">[READY] Say "Hey Friday" or click core.</div>
+          <div class="log-entry system">[BOOT] Arc-Reactor core initializing...</div>
+          <div class="log-entry system">[SYS] Neural pathways online.</div>
+          <div class="log-entry system">[AI] Gemini intelligence layer connected.</div>
+          <div class="log-entry system">[TTS] Emily Neural — Irish accent loaded.</div>
+          <div class="log-entry system">[READY] Say "Hey Friday" or click the core.</div>
         </div>
       </aside>
     </main>
@@ -153,15 +160,15 @@
 
       <!-- Quick Command Action Chips -->
       <div class="quick-chips">
-        <button class="chip" data-cmd="Start Live Mode">🎙️ LIVE STREAM</button>
-        <button class="chip" data-cmd="Give me the morning briefing">☀️ BRIEFING</button>
-        <button class="chip" data-cmd="Look at my screen and tell me what you see">👁️ VISION</button>
+        <button class="chip" data-cmd="Give me the morning briefing, Boss">☀️ BRIEFING</button>
+        <button class="chip" data-cmd="Look at my screen and tell me what you see">👁️ SCAN SCREEN</button>
         <button class="chip" data-cmd="Activate Developer Mode">💻 DEV MODE</button>
         <button class="chip" data-cmd="Activate Movie Mode">🎬 MOVIE MODE</button>
-        <button class="chip" data-cmd="Find all PDF files in my Downloads">📁 FIND PDFS</button>
-        <button class="chip" data-cmd="Check my system diagnostics">📊 DIAGNOSTICS</button>
+        <button class="chip" data-cmd="Activate Focus Mode">🎯 FOCUS MODE</button>
+        <button class="chip" data-cmd="Check my system diagnostics and give me a full hardware report">📊 DIAGNOSTICS</button>
         <button class="chip" data-cmd="What is the weather today?">🌦️ WEATHER</button>
-        <button class="chip" data-cmd="Activate Lockdown Protocol">🔒 LOCKDOWN</button>
+        <button class="chip" data-cmd="Start a mock interview on AWS">🎤 INTERVIEW</button>
+        <button class="chip" data-cmd="Protocol Lockdown">🔒 LOCKDOWN</button>
       </div>
 
       <!-- Attached File Indicator -->
@@ -175,7 +182,7 @@
       <div class="command-bar">
         <input type="file" id="file-input" style="display: none;" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.webp,.txt,.py,.csv" />
         <button id="attach-btn" type="button" class="hud-btn attach-btn" title="Attach Document (PDF, DOCX, PNG, Images, Text)">📎</button>
-        <input type="text" id="cmd-input" placeholder="Type a command or attach file (PDF, DOCX, PNG)..." autocomplete="off" />
+        <input type="text" id="cmd-input" placeholder='Ask me anything — "Hey Friday, what can AWS do for ML?"' autocomplete="off" />
         <button id="mic-btn" type="button" class="hud-btn" title="Toggle Voice Recognition">🎙️</button>
         <button id="send-btn" type="button" class="hud-btn" title="Send Command">⚡</button>
       </div>

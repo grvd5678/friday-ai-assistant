@@ -41,7 +41,9 @@ class MemoryManager:
     # --- Short-term History ---
     def add_message(self, role: str, content: str):
         """Adds a message to the active conversational buffer."""
-        self.short_term_history.append({"role": role, "content": content})
+        # Gemini uses 'model' role; normalize 'assistant' -> 'model' for API compatibility
+        normalized_role = "model" if role == "assistant" else role
+        self.short_term_history.append({"role": normalized_role, "content": content})
         if len(self.short_term_history) > self.max_short_term:
             self.short_term_history = self.short_term_history[-self.max_short_term:]
 

@@ -240,12 +240,24 @@ def _start_telemetry_loop(api: FRIDAY_API):
             minutes, seconds = divmod(remainder, 60)
             uptime_str = f"{hours:02}:{minutes:02}:{seconds:02}"
 
+            # CPU Temperature (Windows: requires admin or OpenHardwareMonitor WMI bridge)
+            temp_str = "N/A"
+            try:
+                temps = psutil.sensors_temperatures()
+                if temps:
+                    for key in ("coretemp", "cpu_thermal", "k10temp", "acpitz"):
+                        if key in temps and temps[key]:
+                            temp_str = f"{temps[key][0].current:.0f}°C"
+                            break
+            except Exception:
+                pass
+
             stats = {
                 "cpu": cpu,
                 "mem": mem,
                 "bat": bat_str,
                 "net": f"{kb_sec} KB/s",
-                "temp": "42°C",
+                "temp": temp_str,
                 "uptime": uptime_str,
                 "proc": procs,
                 "os": "WIN 11"

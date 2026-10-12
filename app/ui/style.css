@@ -197,6 +197,8 @@ body {
   align-items: center;
   position: relative;
   height: 100%;
+  perspective: 1200px;
+  perspective-origin: center center;
 }
 
 .arc-reactor {
@@ -207,12 +209,31 @@ body {
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.12s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* Volumetric Hologram Light Projector Cone */
+.holo-projector-cone {
+  position: absolute;
+  bottom: 30px;
+  width: 320px;
+  height: 220px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(0, 240, 255, 0.2) 0%, rgba(0, 240, 255, 0.05) 55%, transparent 80%);
+  clip-path: polygon(25% 100%, 75% 100%, 100% 0%, 0% 0%);
+  pointer-events: none;
+  filter: blur(3px);
+  animation: holo-cone-flicker 4s ease-in-out infinite alternate;
+  transform: translateZ(-15px);
+  z-index: 1;
 }
 
 .ring {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
+  transform-style: preserve-3d;
 }
 
 .outer-ring {
@@ -220,6 +241,7 @@ body {
   height: 420px;
   border: 1px solid rgba(0, 240, 255, 0.25);
   box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.05);
+  transform: translateZ(-10px);
 }
 
 .dashed-ring {
@@ -227,6 +249,7 @@ body {
   height: 380px;
   border: 2px dashed rgba(0, 240, 255, 0.45);
   animation: spin-cw 30s linear infinite;
+  transform: translateZ(-5px);
 }
 
 .arc-ring-1 {
@@ -237,6 +260,7 @@ body {
   border-bottom-color: var(--cyan-primary);
   box-shadow: 0 0 15px var(--cyan-primary);
   animation: spin-ccw 14s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform: translateZ(5px);
 }
 
 .arc-ring-2 {
@@ -246,6 +270,7 @@ body {
   border-left-color: var(--cyan-secondary);
   border-right-color: var(--cyan-secondary);
   animation: spin-cw 8s linear infinite;
+  transform: translateZ(10px);
 }
 
 .crosshair-h {
@@ -254,6 +279,7 @@ body {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.35), transparent);
   pointer-events: none;
+  transform: translateZ(2px);
 }
 
 .crosshair-v {
@@ -262,6 +288,7 @@ body {
   width: 1px;
   background: linear-gradient(180deg, transparent, rgba(0, 240, 255, 0.35), transparent);
   pointer-events: none;
+  transform: translateZ(2px);
 }
 
 /* Orbiting Particles */
@@ -310,20 +337,79 @@ body {
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  border: 2px solid rgba(0, 240, 255, 0.4);
-  box-shadow: 0 0 35px rgba(0, 240, 255, 0.4), inset 0 0 25px rgba(0, 240, 255, 0.3);
-  background: radial-gradient(circle at center, rgba(0, 30, 50, 0.9) 0%, rgba(2, 8, 16, 0.95) 75%);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 2px solid rgba(0, 240, 255, 0.55);
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.55), inset 0 0 30px rgba(0, 240, 255, 0.4);
+  background: radial-gradient(circle at 50% 40%, rgba(0, 40, 70, 0.9) 0%, rgba(2, 8, 16, 0.98) 80%);
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   animation: holo-breath 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+  z-index: 5;
 }
 
+/* Back energy sphere */
 .holo-energy-backdrop {
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.25) 0%, rgba(0, 100, 180, 0.15) 50%, transparent 75%);
   pointer-events: none;
+  transform: translateZ(-15px);
+  animation: backdrop-pulse 3s ease-in-out infinite alternate;
+}
+
+/* Ultra-fine Laser Hologram Scanlines */
+.holo-scanlines-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 240, 255, 0.15) 0px,
+    rgba(0, 240, 255, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  opacity: 0.8;
+  transform: translateZ(25px);
+  z-index: 3;
+}
+
+/* Fresnel Rim Light (Gives cinematic 3D silhouette glow) */
+.holo-fresnel-rim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, transparent 60%, rgba(0, 240, 255, 0.45) 90%, rgba(0, 240, 255, 0.9) 100%);
+  box-shadow: inset 0 0 25px rgba(0, 240, 255, 0.7);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transform: translateZ(30px);
+  z-index: 4;
+}
+
+/* Floating Lens Flare Ring */
+.holo-flare-ring {
+  position: absolute;
+  width: 242px;
+  height: 242px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-top: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 12px #00f0ff;
+  pointer-events: none;
+  animation: spin-cw 10s linear infinite;
+  transform: translateZ(32px);
+  z-index: 4;
 }
 
 .hologram-avatar {
@@ -332,20 +418,24 @@ body {
   object-fit: cover;
   border-radius: 50%;
   mix-blend-mode: screen;
-  filter: brightness(1.15) contrast(1.1) drop-shadow(0 0 10px rgba(0, 240, 255, 0.7));
-  transition: filter 0.25s ease;
+  filter: brightness(1.18) contrast(1.12) drop-shadow(0 0 15px rgba(0, 240, 255, 0.85)) drop-shadow(0 0 35px rgba(0, 180, 255, 0.45));
+  transition: filter 0.25s ease, transform 0.2s ease;
   pointer-events: none;
+  transform: translateZ(20px);
+  z-index: 2;
 }
 
 .holo-scanline-beam {
   position: absolute;
   width: 100%;
   height: 3px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.8), transparent);
-  box-shadow: 0 0 8px #00f0ff;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), rgba(0, 240, 255, 0.95), transparent);
+  box-shadow: 0 0 12px #00f0ff, 0 0 20px #00f0ff;
   top: -10%;
   animation: scan-sweep 3s ease-in-out infinite;
   pointer-events: none;
+  transform: translateZ(35px);
+  z-index: 5;
 }
 
 .avatar-tag {
@@ -356,51 +446,80 @@ body {
   letter-spacing: 3px;
   color: var(--cyan-primary);
   text-shadow: 0 0 8px var(--cyan-primary);
-  background: rgba(3, 7, 13, 0.75);
+  background: rgba(3, 7, 13, 0.85);
   padding: 2px 8px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  border: 1px solid rgba(0, 240, 255, 0.35);
   pointer-events: none;
+  transform: translateZ(40px);
+  z-index: 6;
+}
+
+/* Boot-Up Digitization Sequence */
+.hologram-avatar-container.booting {
+  animation: holo-boot 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes holo-boot {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateY(30px);
+    filter: brightness(3) blur(8px);
+  }
+  50% {
+    opacity: 0.85;
+    filter: brightness(2) blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: brightness(1) blur(0);
+  }
 }
 
 /* State Modifiers */
 .hologram-avatar-container.speaking {
   border-color: #00f0ff;
-  box-shadow: 0 0 55px rgba(0, 240, 255, 0.85), inset 0 0 30px rgba(0, 240, 255, 0.45);
+  box-shadow: 0 0 60px rgba(0, 240, 255, 0.95), inset 0 0 35px rgba(0, 240, 255, 0.55);
   animation: holo-speak 0.35s ease-in-out infinite alternate;
 }
 
 .hologram-avatar-container.speaking .hologram-avatar {
-  filter: brightness(1.3) contrast(1.15) drop-shadow(0 0 22px rgba(0, 240, 255, 0.95));
+  filter: brightness(1.35) contrast(1.18) drop-shadow(0 0 25px rgba(0, 240, 255, 1)) drop-shadow(0 0 45px rgba(0, 180, 255, 0.6));
 }
 
 .hologram-avatar-container.listening {
   border-color: var(--orange-accent);
-  box-shadow: 0 0 55px rgba(255, 119, 0, 0.85), inset 0 0 30px rgba(255, 119, 0, 0.4);
+  box-shadow: 0 0 65px rgba(255, 119, 0, 0.95), inset 0 0 35px rgba(255, 119, 0, 0.5);
+  animation: holo-listen-pulse 1.2s ease-in-out infinite alternate;
 }
 
 .hologram-avatar-container.listening .hologram-avatar {
-  filter: brightness(1.25) contrast(1.15) hue-rotate(30deg) drop-shadow(0 0 20px rgba(255, 119, 0, 0.9));
+  filter: brightness(1.3) contrast(1.18) hue-rotate(25deg) drop-shadow(0 0 25px rgba(255, 119, 0, 0.95));
 }
 
 .hologram-avatar-container.thinking {
   border-color: #00ffff;
-  box-shadow: 0 0 65px rgba(0, 240, 255, 0.95), inset 0 0 35px rgba(0, 240, 255, 0.6);
+  box-shadow: 0 0 70px rgba(0, 240, 255, 1), inset 0 0 40px rgba(0, 240, 255, 0.7);
+  animation: holo-thinking-flicker 0.25s infinite alternate;
+}
+
+.hologram-avatar-container.thinking .holo-scanline-beam {
+  animation: scan-sweep 1.2s ease-in-out infinite;
 }
 
 .hologram-avatar-container:hover {
-  transform: scale(1.04);
-  box-shadow: 0 0 50px rgba(0, 240, 255, 0.85);
+  box-shadow: 0 0 55px rgba(0, 240, 255, 0.9);
 }
 
 @keyframes holo-breath {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 30px rgba(0, 240, 255, 0.4), inset 0 0 20px rgba(0, 240, 255, 0.3);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.5), inset 0 0 25px rgba(0, 240, 255, 0.35);
   }
   50% {
     transform: scale(1.025);
-    box-shadow: 0 0 50px rgba(0, 240, 255, 0.75), inset 0 0 30px rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 55px rgba(0, 240, 255, 0.8), inset 0 0 35px rgba(0, 240, 255, 0.55);
   }
 }
 
@@ -409,10 +528,30 @@ body {
   100% { transform: scale(1.035); }
 }
 
+@keyframes holo-listen-pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.04); }
+}
+
+@keyframes holo-thinking-flicker {
+  0% { opacity: 0.94; }
+  100% { opacity: 1; }
+}
+
+@keyframes holo-cone-flicker {
+  0% { opacity: 0.65; transform: translateZ(-15px) scaleX(0.95); }
+  100% { opacity: 0.95; transform: translateZ(-15px) scaleX(1.03); }
+}
+
+@keyframes backdrop-pulse {
+  0% { opacity: 0.7; transform: translateZ(-15px) scale(0.95); }
+  100% { opacity: 1; transform: translateZ(-15px) scale(1.05); }
+}
+
 @keyframes scan-sweep {
   0% { top: -10%; opacity: 0; }
-  25% { opacity: 0.9; }
-  75% { opacity: 0.9; }
+  25% { opacity: 0.95; }
+  75% { opacity: 0.95; }
   100% { top: 110%; opacity: 0; }
 }
 

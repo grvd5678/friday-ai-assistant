@@ -124,6 +124,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // --- 3D Holographic Parallax Cursor Tracking ---
+  let targetRotX = 0;
+  let targetRotY = 0;
+  let currentRotX = 0;
+  let currentRotY = 0;
+
+  window.addEventListener("mousemove", (e) => {
+    const halfW = window.innerWidth / 2;
+    const halfH = window.innerHeight / 2;
+    // Calculate normalized -1 to +1 coordinates from center of viewport
+    const normX = (e.clientX - halfW) / (halfW || 1);
+    const normY = (e.clientY - halfH) / (halfH || 1);
+
+    // Subtle, realistic tilt bounds: max 9 degrees X, 12 degrees Y
+    targetRotX = -normY * 9;
+    targetRotY = normX * 12;
+  });
+
+  window.addEventListener("mouseleave", () => {
+    targetRotX = 0;
+    targetRotY = 0;
+  });
+
+  function renderParallax() {
+    // Smooth cinematic spring/lerp easing for 60fps tracking
+    currentRotX += (targetRotX - currentRotX) * 0.08;
+    currentRotY += (targetRotY - currentRotY) * 0.08;
+
+    if (arcReactor) {
+      arcReactor.style.transform = `rotateX(${currentRotX.toFixed(2)}deg) rotateY(${currentRotY.toFixed(2)}deg)`;
+    }
+
+    requestAnimationFrame(renderParallax);
+  }
+  requestAnimationFrame(renderParallax);
+
+  // Clear boot-up digitization sequence after initial entrance
+  setTimeout(() => {
+    if (avatarContainer) {
+      avatarContainer.classList.remove("booting");
+    }
+  }, 1600);
+
   // --- Real-time Clock ---
   function updateClock() {
     const now = new Date();
@@ -131,6 +174,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   setInterval(updateClock, 1000);
   updateClock();
+
+  // Marvel-style thinking lines shown while FRIDAY processes
+  const THINKING_LINES = [
+    "Accessing neural pathways...",
+    "Cross-referencing tactical database...",
+    "Running analysis, Boss...",
+    "On it. Give me a moment...",
+    "Scanning all available intel...",
+    "Processing. Stand by, Boss...",
+    "Pulling that up now...",
+    "Already on it...",
+    "Checking all systems...",
+    "Compiling response, Boss...",
+  ];
 
   // --- Global HUD Interface (Callable from Python) ---
   window.fridayHUD = {
@@ -176,6 +233,9 @@ document.addEventListener("DOMContentLoaded", () => {
         statusLabel.style.color = "#00f0ff";
         waveform.classList.remove("speaking");
         if (avatarContainer) avatarContainer.className = "hologram-avatar-container thinking";
+        // Show a random Marvel-style thinking line in the log
+        const thinkLine = THINKING_LINES[Math.floor(Math.random() * THINKING_LINES.length)];
+        window.fridayHUD.appendLog("system", thinkLine);
       } else {
         // STANDBY / READY
         stopLipSync();

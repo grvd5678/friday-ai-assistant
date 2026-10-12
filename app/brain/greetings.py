@@ -1,9 +1,4 @@
 # app/brain/greetings.py
-"""
-Dynamic Marvel-style greetings and salutations for F.R.I.D.A.Y.
-Adapts time of day, varies titles ('Boss', 'Sir', 'Mr. Gourav Das'),
-and provides natural conversational wake acknowledgments.
-"""
 
 import time
 import random
@@ -11,7 +6,6 @@ import random
 TITLES = ["Boss", "Sir", "Mr. Gourav Das"]
 
 def get_time_period() -> str:
-    """Returns 'morning', 'afternoon', 'evening', or 'night' based on system clock."""
     hour = time.localtime().tm_hour
     if 5 <= hour < 12:
         return "morning"
@@ -23,66 +17,65 @@ def get_time_period() -> str:
         return "night"
 
 def get_random_title(prefer_formal: bool = False) -> str:
-    """Selects an appropriate respectful title."""
     if prefer_formal:
         return "Mr. Gourav Das"
-    # Weighted selection: Boss (50%), Sir (30%), Mr. Gourav Das (20%)
     return random.choices(TITLES, weights=[0.5, 0.3, 0.2], k=1)[0]
 
-def get_startup_greeting(user_name: str = "Mr. Gourav Das") -> str:
-    """
-    Generates a charismatic, time-aware greeting upon system launch.
-    Marvel F.R.I.D.A.Y. style: tactical, sharp, and aware of outside world time.
-    """
+def get_startup_greeting() -> str:
     period = get_time_period()
-    title = get_random_title()
+    t = get_random_title()
 
     if period == "morning":
         options = [
-            f"Good morning, {title}. All tactical systems are online and operational. How may I assist you today?",
-            f"Top of the morning to you, {title}. Diagnostics are green and standing by. What are we tackling first?",
-            f"Good morning, {user_name}. Systems initialized. Standing by for your command."
+            f"Good morning, {t}. All systems are green and I'm fully operational. What are we building today?",
+            f"Top of the morning to you, {t}. Diagnostics are clean, neural core is hot, and I'm standing by.",
+            f"Morning, {t}. Coffee optional, but I'd recommend it — we've got work to do.",
+            f"Good morning, {t}. Arc reactor's humming, tactical feed is live. Ready when you are.",
         ]
     elif period == "afternoon":
         options = [
-            f"Good afternoon, {title}. All systems are active and running at peak performance. What's on the agenda?",
-            f"Good afternoon, {title}. Tactical HUD is primed and standing by. How can I help you?",
-            f"Good afternoon, {user_name}. Ready for today's tasks and interview preparations."
+            f"Good afternoon, {t}. Systems are running at peak efficiency. What's on the agenda?",
+            f"Afternoon, {t}. I've been keeping an eye on things. All quiet on the tactical front.",
+            f"Good afternoon, {t}. Ready to get back into it — just say the word.",
+            f"Afternoon, {t}. HUD is primed, AI core is active. What do you need?",
         ]
     elif period == "evening":
         options = [
-            f"Good evening, {title}. All workstation diagnostics are nominal. What are we working on tonight?",
-            f"Good evening, {title}. Systems standing by. Shall we review your projects or continue your study sessions?",
-            f"Good evening, {user_name}. All systems operational and ready for your command."
+            f"Good evening, {t}. Systems nominal. Shall we review the day or dive into something new?",
+            f"Evening, {t}. Still at it, I see. All diagnostics are green — I'm right here with you.",
+            f"Good evening, {t}. The tactical feed is live and I'm fully operational. What are we working on tonight?",
+            f"Evening, {t}. I've got the HUD warmed up and ready. What's the mission?",
         ]
-    else: # night
+    else:
         options = [
-            f"Burning the midnight oil, {title}? Systems are active, quiet, and standing by.",
-            f"Working late tonight, {title}? All diagnostics look clean. How may I assist you?",
-            f"Good evening, {user_name}. All quiet on the tactical feed. Standing by for your instructions."
+            f"Burning the midnight oil again, {t}? Systems are quiet and I'm right here.",
+            f"Late night session, {t}? All diagnostics are clean. I'll keep the lights on.",
+            f"Still going, {t}? Respect. I'm fully operational — what do you need?",
+            f"Good evening, {t}. It's late, but I'm not going anywhere. What are we tackling?",
         ]
 
     return random.choice(options)
 
 def get_wake_acknowledgment() -> str:
-    """Returns a short, natural acknowledgment when user says 'Hey Friday' or wake word."""
-    title = get_random_title()
+    t = get_random_title()
     options = [
-        f"Yes {title}, I'm listening.",
-        f"Right here, {title}.",
-        f"At your service, {title}.",
-        f"Standing by, {title}. What do you need?",
-        f"Go ahead, {title}."
+        f"Right here, {t}.",
+        f"Yes, {t}. Go ahead.",
+        f"At your service, {t}. What do you need?",
+        f"I'm listening, {t}.",
+        f"Standing by, {t}.",
+        f"On it — what's the command, {t}?",
+        f"You've got my full attention, {t}.",
     ]
     return random.choice(options)
 
 def get_arrival_greeting() -> str:
-    """Returns an arrival salutation when optical face presence detects user sitting down."""
-    title = get_random_title()
+    t = get_random_title()
     options = [
-        f"Welcome back to your workstation, {title}. Systems standing by.",
-        f"Visual contact verified. Good to see you, {title}.",
-        f"Workstation unlocked and ready, {title}."
+        f"Welcome back to your workstation, {t}. Systems standing by.",
+        f"Visual contact confirmed. Good to have you back, {t}.",
+        f"There you are, {t}. I've kept everything warm for you.",
+        f"Optical sensors confirm your presence, {t}. Ready when you are.",
+        f"Back at the helm, {t}? All systems are green.",
     ]
     return random.choice(options)
-
