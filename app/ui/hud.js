@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const arcReactor = document.getElementById("arc-reactor");
   const avatarContainer = document.getElementById("avatar-container");
   const avatarImg = document.getElementById("friday-avatar");
+  const eyelidOverlay = document.getElementById("eyelid-overlay");
   const widgetToggleBtn = document.getElementById("widget-toggle-btn");
   const widgetRestoreBtn = document.getElementById("widget-restore-btn");
 
@@ -159,6 +160,42 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(renderParallax);
   }
   requestAnimationFrame(renderParallax);
+
+  // --- Subtle Visual Cues: Natural Eye Blinking & Attentive Glance ---
+  function triggerBlink() {
+    if (eyelidOverlay) {
+      eyelidOverlay.classList.remove("blink");
+      // Force reflow
+      void eyelidOverlay.offsetWidth;
+      eyelidOverlay.classList.add("blink");
+      setTimeout(() => {
+        if (eyelidOverlay) eyelidOverlay.classList.remove("blink");
+      }, 200);
+    }
+    // Schedule next natural blink (between 3.5s and 6.5s)
+    const nextBlink = Math.floor(Math.random() * 3000) + 3500;
+    setTimeout(triggerBlink, nextBlink);
+  }
+  // Start blinking loop after initial boot
+  setTimeout(triggerBlink, 2500);
+
+  // Subtle periodic micro-glance (attentive gaze tracking)
+  function triggerMicroGlance() {
+    if (avatarImg) {
+      const directions = ["glance-left", "glance-right", ""];
+      const chosen = directions[Math.floor(Math.random() * directions.length)];
+      avatarImg.classList.remove("glance-left", "glance-right");
+      if (chosen) {
+        avatarImg.classList.add(chosen);
+        setTimeout(() => {
+          if (avatarImg) avatarImg.classList.remove("glance-left", "glance-right");
+        }, 900);
+      }
+    }
+    const nextGlance = Math.floor(Math.random() * 6000) + 7000;
+    setTimeout(triggerMicroGlance, nextGlance);
+  }
+  setTimeout(triggerMicroGlance, 4000);
 
   // Clear boot-up digitization sequence after initial entrance
   setTimeout(() => {

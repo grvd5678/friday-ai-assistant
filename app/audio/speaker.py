@@ -98,10 +98,10 @@ def prepare_spoken_summary(text: str) -> str:
         # If original text had markdown sections or was long, add tactical feed notice if not already present
         if len(words) > 40 or has_markdown_sections:
             if "tactical feed" not in res.lower() and "feed" not in res.lower():
-                res += " I've displayed the complete tactical dossier in your Tactical Feed, Boss."
+                res += " I've displayed the complete breakdown in your Tactical Feed."
         return res
 
-    return "I have analyzed the data and displayed the complete tactical dossier in your Tactical Feed, Boss."
+    return "I have analyzed the document and placed the complete breakdown in your Tactical Feed."
 
 async def _generate_audio(text: str, file_path: str):
     """Generates speech file using Edge-TTS neural female voice with quick retry."""

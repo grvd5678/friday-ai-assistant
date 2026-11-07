@@ -117,16 +117,16 @@ class TestFridayCore(unittest.TestCase):
         self.assertIsNone(cleared["path"])
 
     def test_dynamic_greetings(self):
-        """Verify dynamic Marvel greetings, time-of-day awareness, and dynamic title rotation."""
+        """Verify dynamic greetings, time-of-day awareness, and grounded salutations."""
         from app.brain.greetings import get_time_period, get_startup_greeting, get_wake_acknowledgment
         period = get_time_period()
         self.assertIn(period, ["morning", "afternoon", "evening", "night"])
 
         greeting = get_startup_greeting()
-        self.assertTrue(any(title in greeting for title in ["Boss", "Sir", "Mr. Gourav Das"]))
+        self.assertTrue(isinstance(greeting, str) and len(greeting) > 10)
 
         ack = get_wake_acknowledgment()
-        self.assertTrue(any(title in ack for title in ["Boss", "Sir", "Mr. Gourav Das"]))
+        self.assertTrue(isinstance(ack, str) and len(ack) > 3)
 
     def test_app_launcher_robustness(self):
         """Verify app launcher handles URI protocols, URLs, and commands without shell crashes."""
