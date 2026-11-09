@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const arcReactor = document.getElementById("arc-reactor");
   const avatarContainer = document.getElementById("avatar-container");
   const avatarImg = document.getElementById("friday-avatar");
+  const avatarVideo = document.getElementById("friday-avatar-video");
   const eyelidOverlay = document.getElementById("eyelid-overlay");
   const widgetToggleBtn = document.getElementById("widget-toggle-btn");
   const widgetRestoreBtn = document.getElementById("widget-restore-btn");
@@ -58,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- Viseme Lip-Sync Animation Engine ---
+  // --- Phonetic Viseme Lip-Sync (driven by Edge-TTS WordBoundary events from Python) ---
   const VISEME_FRAMES = [
     "friday_face_f0.png", // 0: Closed / Resting
     "friday_face_f1.png", // 1: Slightly parted
@@ -68,60 +69,23 @@ document.addEventListener("DOMContentLoaded", () => {
     "friday_face_f5.png"  // 5: Soft smile / open
   ];
 
-  // Pre-cache all frames in memory for 0ms latency switching
-  VISEME_FRAMES.forEach((src) => {
-    const img = new Image();
-    img.src = src;
-  });
-
-  // Natural speech viseme patterns simulating syllables and phonemes
-  const SPEECH_PATTERNS = [
-    [1, 2, 3, 2, 1, 0],
-    [1, 4, 3, 2, 1],
-    [2, 5, 2, 1, 0],
-    [1, 2, 4, 1, 0],
-    [2, 3, 5, 2, 1]
-  ];
+  // Pre-cache all frames for 0ms latency switching
+  VISEME_FRAMES.forEach((src) => { const img = new Image(); img.src = src; });
 
   let speechTimer = null;
-  let patternIdx = 0;
-  let stepIdx = 0;
 
   function startLipSync() {
-    if (speechTimer) return;
-
-    let currentPattern = SPEECH_PATTERNS[0];
-    patternIdx = 0;
-    stepIdx = 0;
-
-    function step() {
-      if (!avatarImg) return;
-
-      const frameNum = currentPattern[stepIdx];
-      avatarImg.src = VISEME_FRAMES[frameNum];
-
-      stepIdx++;
-      if (stepIdx >= currentPattern.length) {
-        stepIdx = 0;
-        patternIdx = (patternIdx + 1) % SPEECH_PATTERNS.length;
-        currentPattern = SPEECH_PATTERNS[patternIdx];
-      }
-
-      // Natural cadence variation: 80ms - 130ms per viseme transition
-      const delay = Math.floor(Math.random() * 50) + 80;
-      speechTimer = setTimeout(step, delay);
-    }
-
-    step();
+    // No-op: lip sync is now driven by Python phoneme callbacks via setVisemeFrame
+    // Kept for state compatibility
   }
 
   function stopLipSync() {
-    if (speechTimer) {
-      clearTimeout(speechTimer);
-      speechTimer = null;
-    }
-    if (avatarImg) {
-      avatarImg.src = VISEME_FRAMES[0]; // Return to resting closed lips
+    if (speechTimer) { clearTimeout(speechTimer); speechTimer = null; }
+    if (avatarImg) avatarImg.src = VISEME_FRAMES[0];
+    if (waveform && waveform.children.length > 0) {
+      Array.from(waveform.children).forEach((bar) => {
+        bar.style.transform = "scaleY(0.18)";
+      });
     }
   }
 
@@ -228,6 +192,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Global HUD Interface (Callable from Python) ---
   window.fridayHUD = {
+    setVisemeFrame: function (frameIndex) {
+      if (!avatarImg) return;
+      const idx = Math.max(0, Math.min(VISEME_FRAMES.length - 1, Number(frameIndex) || 0));
+      avatarImg.src = VISEME_FRAMES[idx];
+
+      // Real-time audio waveform animation locked to viseme mouth aperture
+      if (waveform && waveform.children.length > 0) {
+        const intensity = idx === 0 ? 0.15 : (idx / 5.0);
+        Array.from(waveform.children).forEach((bar, i) => {
+          const scale = 0.15 + (Math.sin(i * 0.45) * 0.35 + 0.5) * intensity;
+          bar.style.transform = `scaleY(${scale.toFixed(2)})`;
+        });
+      }
+    },
+
+    setAvatarVideo: function (videoPath) {
+      if (!avatarVideo || !avatarImg) return;
+      if (videoPath) {
+        avatarVideo.src = videoPath;
+        avatarVideo.style.display = "block";
+        avatarImg.style.display = "none";
+        avatarVideo.play().catch(() => {});
+        avatarVideo.onended = () => {
+          avatarVideo.style.display = "none";
+          avatarImg.style.display = "block";
+          avatarImg.src = VISEME_FRAMES[0];
+        };
+      } else {
+        avatarVideo.style.display = "none";
+        avatarImg.style.display = "block";
+        avatarImg.src = VISEME_FRAMES[0];
+      }
+    },
+
     updateTelemetry: function (stats) {
       if (stats.cpu !== undefined && cpuBar && cpuVal) {
         cpuBar.style.width = stats.cpu + "%";

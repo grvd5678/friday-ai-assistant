@@ -16,7 +16,7 @@ if sys.platform.startswith("win"):
 
 from app.config import config
 from app.brain.llm import ask_friday
-from app.audio.speaker import speak, set_speech_callback
+from app.audio.speaker import speak, set_speech_callback, set_viseme_callback, set_avatar_video_callback
 from app.audio.listener import listen, set_listener_callback
 from app.audio.wakeword import wake_listener
 from app.brain.greetings import get_startup_greeting, get_wake_acknowledgment, get_arrival_greeting
@@ -302,6 +302,19 @@ def launch_hud():
 
     set_speech_callback(on_speech)
     set_listener_callback(on_listener)
+
+    # 0ms real-time phonetic viseme sync callback
+    def on_viseme(frame_idx: int):
+        api.js_call(f"window.fridayHUD && window.fridayHUD.setVisemeFrame({frame_idx});")
+
+    set_viseme_callback(on_viseme)
+
+    # Optional talking video avatar callback
+    def on_avatar_video(video_path: str):
+        safe_path = json.dumps(video_path)
+        api.js_call(f"window.fridayHUD && window.fridayHUD.setAvatarVideo({safe_path});")
+
+    set_avatar_video_callback(on_avatar_video)
 
     # Wake word detection callback
     def on_wake_word(detected_phrase):
