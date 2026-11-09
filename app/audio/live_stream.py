@@ -110,7 +110,7 @@ class GeminiLiveStreamer:
 
         try:
             with sd.RawInputStream(samplerate=16000, channels=1, dtype='int16', device=device_idx, blocksize=1024, callback=mic_callback):
-                async with client.aio.live.connect(model="gemini-3.1-flash-live-preview", config=live_config) as session:
+                async with client.aio.live.connect(model="gemini-2.0-flash-live-001", config=live_config) as session:
                     
                     # Task 1: Continuously stream microphone to Gemini
                     async def send_mic():

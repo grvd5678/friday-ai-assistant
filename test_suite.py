@@ -139,6 +139,10 @@ class TestFridayCore(unittest.TestCase):
         res_spot = open_app("spotify")
         self.assertTrue("opening spotify" in res_spot.lower() or "launch" in res_spot.lower())
 
+        # Wispr Flow productivity launcher check
+        res_wispr = open_app("wispr flow")
+        self.assertTrue("opening wispr flow" in res_wispr.lower() or "launch" in res_wispr.lower())
+
     def test_folder_guard_security(self):
         """Verify Gourav's 3-Tier security model: system files blocked, .env protected, project README-only."""
         from app.tools.folder_guard import check_file_access

@@ -4,6 +4,14 @@ from PIL import Image
 from google import genai
 from app.config import config
 
+_vision_client = None
+
+def _get_client():
+    global _vision_client
+    if _vision_client is None and config.GEMINI_API_KEY:
+        _vision_client = genai.Client(api_key=config.GEMINI_API_KEY)
+    return _vision_client
+
 def capture_active_screen():
     """Captures screenshot using PIL, PyAutoGUI, or MSS with safe fallbacks."""
     # 1. Try ImageGrab
@@ -46,12 +54,12 @@ def inspect_screen(question: str = "What is currently visible on my screen?") ->
         # Optimize image size for fast transmission
         screen_img.thumbnail((1280, 720))
 
-        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        client = _get_client()
         tactical_prompt = (
-            f"You are F.R.I.D.A.Y., Tony Stark's tactical AI assistant with an Irish female persona. "
-            f"Directly analyze what is on the user's screen in response to their inquiry: '{question}'. "
-            f"Focus on the active window, any code, errors, messages, or main content. "
-            f"Keep your answer concise, conversational, and direct (2-3 sentences max). Address the user as Boss."
+            f"You are F.R.I.D.A.Y., Tony Stark's tactical AI with an Irish female persona. "
+            f"The user asked: '{question}'. Analyze the screen directly and answer that. "
+            f"If you see code, errors, or something interesting — call it out with personality. "
+            f"2-3 sentences max. Address the user as Boss."
         )
 
         response = client.models.generate_content(
@@ -90,14 +98,15 @@ def inspect_webcam(question: str = "What is the user doing in front of the camer
         cam_img = Image.fromarray(rgb_frame)
         cam_img.thumbnail((640, 480))
 
-        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        client = _get_client()
         tactical_prompt = (
-            f"You are F.R.I.D.A.Y., a tactical personal AI assistant with an Irish female persona. "
-            f"You are looking at a live photo taken from the user's laptop webcam right now. "
-            f"The user asks: '{question}'. "
-            f"Factually and truthfully describe what the user is doing. Specifically check: Are they waving their hand(s)? What are they doing or wearing? "
-            f"Never pretend or hallucinate seeing something not in the image. If they are not waving, state that clearly. "
-            f"Keep your response concise, conversational, and direct (1 to 2 sentences). Address the user as Boss."
+            f"You are F.R.I.D.A.Y., Tony Stark's tactical AI with an Irish female persona. "
+            f"You are looking at a live webcam photo of the user RIGHT NOW. "
+            f"The user asked: '{question}'. "
+            f"Respond like you genuinely SEE them — react naturally with personality. "
+            f"If they're waving, acknowledge it warmly. If they look tired, note it. If they're smiling, match the energy. "
+            f"NEVER hallucinate. If the image is dark or unclear, say so honestly. "
+            f"1-2 sentences max, conversational Irish tone. Address the user as Boss."
         )
 
         response = client.models.generate_content(

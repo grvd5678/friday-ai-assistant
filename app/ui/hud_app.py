@@ -152,6 +152,21 @@ class FRIDAY_API:
                 self.update_status("THINKING", f'PROCESSING: "{display_msg}"')
                 self.append_log("user", display_msg)
 
+                # Proactive pre-action announcements for Marvel-style realism
+                q_lower = query.lower()
+                if any(k in q_lower for k in ["look at me", "can you see", "waving", "what am i doing", "take my photo", "take a photo", "selfie"]):
+                    self.append_log("assistant", "Activating optical sensors, Boss. Give me a moment...")
+                elif any(k in q_lower for k in ["look at my screen", "what am i looking at", "what's on my screen", "inspect my screen", "check my screen"]):
+                    self.append_log("assistant", "Capturing your display now, Boss...")
+                elif any(k in q_lower for k in ["screenshot", "take a screenshot"]):
+                    self.append_log("assistant", "Capturing screenshot, Boss...")
+                elif any(k in q_lower for k in ["weather", "forecast"]):
+                    self.append_log("assistant", "Pulling live weather telemetry, Boss...")
+                elif any(k in q_lower for k in ["morning briefing", "brief me", "briefing"]):
+                    self.append_log("assistant", "Compiling your tactical briefing. Stand by, Boss...")
+                elif any(k in q_lower for k in ["open ", "launch ", "start "]):
+                    self.append_log("assistant", "On it, Boss...")
+
                 if file_path and os.path.exists(file_path):
                     response = analyze_document(file_path, query)
                 elif active_doc and active_doc.get("path") and not any(k in query.lower() for k in ["open ", "close ", "screenshot", "weather", "volume", "lock screen", "mute"]):

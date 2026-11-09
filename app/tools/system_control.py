@@ -38,6 +38,9 @@ APP_MAP = {
     "word": ("cmd", "winword"),
     "excel": ("cmd", "excel"),
     "powerpoint": ("cmd", "powerpnt"),
+    "wispr flow": ("exe", os.path.join(os.environ.get("LOCALAPPDATA", ""), "WisprFlow", "Wispr Flow.exe")),
+    "wispr": ("exe", os.path.join(os.environ.get("LOCALAPPDATA", ""), "WisprFlow", "Wispr Flow.exe")),
+    "flow": ("exe", os.path.join(os.environ.get("LOCALAPPDATA", ""), "WisprFlow", "Wispr Flow.exe")),
     
     # Windows System Tools & Folders
     "explorer": ("cmd", "explorer"),
@@ -73,7 +76,10 @@ PROCESS_MAP = {
     "calculator": "CalculatorApp.exe",
     "calc": "CalculatorApp.exe",
     "paint": "mspaint.exe",
-    "task manager": "taskmgr.exe"
+    "task manager": "taskmgr.exe",
+    "wispr flow": "Wispr Flow.exe",
+    "wispr": "Wispr Flow.exe",
+    "flow": "Wispr Flow.exe"
 }
 
 def open_app(app_name: str) -> str:
@@ -100,19 +106,26 @@ def open_app(app_name: str) -> str:
         try:
             if kind == "url":
                 webbrowser.open(target)
-                return f"Opening {app_name} for you now, Boss."
+                return f"Opening {app_name} for you now."
             elif kind == "uri":
                 try:
                     os.startfile(target)
                 except Exception:
                     subprocess.Popen(f'start "" "{target}"', shell=True)
-                return f"Opening {app_name} for you now, Boss."
+                return f"Opening {app_name} for you now."
+            elif kind == "exe":
+                if os.path.exists(target):
+                    os.startfile(target)
+                    return f"Opening {app_name} for you now."
+                else:
+                    subprocess.Popen(f'start "" "{target}"', shell=True)
+                    return f"Attempting to launch {app_name}."
             elif kind == "folder":
                 subprocess.Popen(f'explorer {target}', shell=True)
-                return f"Opening {app_name} folder for you now, Boss."
+                return f"Opening {app_name} folder for you now."
             elif kind == "cmd":
                 subprocess.Popen(target, shell=True)
-                return f"Opening {app_name} for you now, Boss."
+                return f"Opening {app_name} for you now."
         except Exception as e:
             return f"Could not launch {app_name}: {str(e)}"
 
